@@ -1,0 +1,8 @@
+.camera-view {
+    max-width: 600px; /* Set the maximum width */
+    max-height: 400px; /* Set the maximum height */
+    display: block;
+    margin: 0 auto; /* Center the video horizontally */
+    padding: 20px; /* Add some padding around the video */
+  }
+  

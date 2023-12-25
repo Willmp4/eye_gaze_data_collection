@@ -1,0 +1,10 @@
+backend/shape_predictor_68_face_landmarks.dat
+*.pyc
+*.csv
+/frontend/node_modules
+backend/web_app
+*.md
+/frontend/build
+/web_app
+*.pyc
+backend/ProgramAccess_accessKeys.csv
