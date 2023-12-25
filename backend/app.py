@@ -103,8 +103,8 @@ def process_image():
     
     user_id = request.form.get('userId')
 
-    cursor_position = json.loads(request.form.get('cursorPosition')) if cursor_position else None
-    screen_data = json.loads(request.form.get('screenData')) if screen_data else None
+    cursor_position = json.loads(request.form.get('cursorPosition')) if request.form.get('cursorPosition') else None
+    screen_data = json.loads(request.form.get('screenData')) if request.form.get('screenData') else None
     
     in_memory_file = io.BytesIO()
     file.save(in_memory_file)
