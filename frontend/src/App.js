@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./App.css";
 import CameraComponent from "./useCamera"; // Make sure the path is correct
 import { Button } from "react-bootstrap";
+import useCalibration from "./useCalibration";
 
 function App() {
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -22,6 +23,7 @@ function App() {
       <p>Enter your usename in the box before anything.</p>
       <p>Please go fullscreen and look at the cursor before pressing the space bar.</p>
       <Button onClick={handleFullScreen}>{isFullScreen ? "Exit Full Screen" : "Go Full Screen"}</Button>
+      <useCalibration />
       <CameraComponent />
     </div>
   );
