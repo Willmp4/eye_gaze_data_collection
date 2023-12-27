@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
-import CameraComponent from "./getCamera"; // Make sure the path is correct
+import CameraComponent from "./useCamera"; // Make sure the path is correct
 import { Button } from "react-bootstrap";
 
 function App() {
