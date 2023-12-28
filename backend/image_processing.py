@@ -1,8 +1,6 @@
 import dlib
 import cv2
 import numpy as np
-# import pyautogui
-import keyboard
 import boto3
 import time
 import csv
@@ -82,23 +80,9 @@ def convert_eye_to_binary(eye_image):
     
     return binary_eye
 
-
-# cap = cv2.VideoCapture(0)
-
-# size = cap.read()[1].shape
-# focal_length = size[1]
-# center = (size[1]/2, size[0]/2)
-# camera_matrix = np.array(
-#     [[focal_length, 0, center[0]],
-#      [0, focal_length, center[1]],
-#      [0, 0, 1]], dtype = "double"
-# )
-# dist_coeffs = np.zeros((4,1))
-
 s3_client = boto3.client('s3')
 bucket_name = 'eye-gaze-data'
 
-# Function to capture and save data
 def capture_and_save(user_id, original_frame, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox, additional_data, data_type='eye_gaze'):
     user_data_dir = f'data/{user_id}/'
     metadata_file = f'{user_data_dir}metadata.json'
@@ -140,11 +124,12 @@ def capture_and_save(user_id, original_frame, left_eye_info, right_eye_info, lef
     
     if screen_data_changed(bucket_name, metadata_file, screen_data, s3_client):
         # Handle the change here, like updating the metadata in S3
-        try:
-            s3_client.put_object(Body=json.dumps(screen_data), Bucket=bucket_name, Key=metadata_file)
-            logging.info("Successfully updated metadata in S3.")
-        except Exception as e:
-            logging.error(f"Error updating metadata in S3: {e}")
+        if screen_data != None and len(screen_data) > 0 and screen_data !='null':
+            try:
+                s3_client.put_object(Body=json.dumps(screen_data), Bucket=bucket_name, Key=metadata_file)
+                logging.info("Successfully updated metadata in S3.")
+            except Exception as e:
+                logging.error(f"Error updating metadata in S3: {e}")
 
 
     img_name = f'{img_dir}{user_id}_{int(time.time())}.png'
@@ -196,39 +181,3 @@ def screen_data_changed(bucket_name, metadata_file, screen_data, s3_client):
         logging.error(f"Error accessing S3: {e}")
         return True
 
-# # Function for head pose estimation
-# def get_head_pose(shape):
-#     # Define the model points (the points in a generic 3D model face)
-#     model_points = np.array([
-#            (0.0, 0.0, 0.0),             # Nose tip
-#            (0.0, -330.0, -65.0),        # Chin
-#            (-225.0, 170.0, -135.0),     # Left eye left corner
-#            (225.0, 170.0, -135.0),      # Right eye right corne
-#            (-150.0, -150.0, -125.0),    # Left Mouth corner
-#            (150.0, -150.0, -125.0)      # Right mouth corner
-#        ])
-#    # 2D image points from the facial landmark detection
-#     image_points = np.array([
-#             (shape.part(30).x, shape.part(30).y),     # Nose tip
-#             (shape.part(8).x, shape.part(8).y),       # Chin
-#             (shape.part(36).x, shape.part(36).y),     # Left eye left corner
-#             (shape.part(45).x, shape.part(45).y),     # Right eye right corner
-#             (shape.part(48).x, shape.part(48).y),     # Left Mouth corner
-#             (shape.part(54).x, shape.part(54).y)      # Right mouth corner
-#         ], dtype="double")
-
-
-#     (success, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
-
-#     return rotation_vector, translation_vector
-
-
-# def draw_pose(original_frame, rotation_vector, translation_vector, camera_matrix):
-#     # Project a 3D point (0, 0, 1000.0) onto the image plane
-#     # We use this to draw a line sticking out of the nose
-#     (nose_end_point2D, _) = cv2.projectPoints(np.array([(0.0, 0.0, 1000.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
-
-#     p1 = (int(translation_vector[0]), int(translation_vector[1]))
-#     p2 = (int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
-
-#     cv2.line(original_frame, p1, p2, (255, 0, 0), 2)
