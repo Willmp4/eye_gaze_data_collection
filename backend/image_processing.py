@@ -1,6 +1,8 @@
 import dlib
 import cv2
 import numpy as np
+# import pyautogui
+import keyboard
 import boto3
 import time
 import csv
@@ -80,48 +82,80 @@ def convert_eye_to_binary(eye_image):
     
     return binary_eye
 
-s3_client = boto3.client('s3')
-bucket_name = 'eye-gaze-data'
+# s3_client = boto3.client('s3')
+# bucket_name = 'eye-gaze-data'
 
-def capture_and_save(user_id, original_frame, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox, additional_data, data_type='eye_gaze'):
+def capture_and_save(user_id, original_frame, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox, additional_data, data_type='eye_gaze', s3_client=boto3.client('s3'), bucket_name='eye-gaze-data'):
     user_data_dir = f'data/{user_id}/'
     metadata_file = f'{user_data_dir}metadata.json'
 
+    img_dir, csv_name, data_row = get_directories_and_data_row(user_data_dir, data_type, additional_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox)
+
+    # Update metadata only for calibration data
     if data_type == 'calibration':
-        img_dir = f'{user_data_dir}calibration_images/'
-        csv_name = f'{user_data_dir}calibration_data.csv'
-        calibration_points, screen_data = additional_data
-        head_pose = None
-        rotation_vector, translation_vector = head_pose if head_pose else (np.zeros((3,1)), np.zeros((3,1)))
-        rotation_vector_str = ','.join(map(str, rotation_vector.flatten()))
-        translation_vector_str = ','.join(map(str, translation_vector.flatten()))
+        screen_data = additional_data[1]  # Assuming screen_data is the second element in additional_data
+        update_metadata_if_changed(bucket_name, metadata_file, screen_data, s3_client)
 
-        data_row = [
-            calibration_points[0], calibration_points[1],  # X, Y coordinates of calibration point
-            left_eye_info[0], left_eye_info[1],
-            left_eye_bbox[0], left_eye_bbox[1], left_eye_bbox[2], left_eye_bbox[3],
-            right_eye_info[0], right_eye_info[1],
-            right_eye_bbox[0], right_eye_bbox[1], right_eye_bbox[2], right_eye_bbox[3],
-            rotation_vector_str, translation_vector_str
-        ]
+    upload_image_and_update_csv(s3_client, bucket_name, user_id, img_dir, original_frame, csv_name, data_row)
+
+def get_directories_and_data_row(user_data_dir, data_type, additional_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox):
+    if data_type == 'calibration':
+        img_dir, csv_name, data_row = prepare_calibration_data(user_data_dir, additional_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox)
     else:
-        img_dir = f'{user_data_dir}images/'
-        csv_name = f'{user_data_dir}data.csv'
-        cursor_x, cursor_y, screen_data, head_pose = additional_data
-        rotation_vector, translation_vector = head_pose if head_pose else (np.zeros((3,1)), np.zeros((3,1)))
-        rotation_vector_str = ','.join(map(str, rotation_vector.flatten()))
-        translation_vector_str = ','.join(map(str, translation_vector.flatten()))
-
-        
-        data_row = [
-            cursor_x, cursor_y,
-            left_eye_info[0], left_eye_info[1],
-            left_eye_bbox[0], left_eye_bbox[1], left_eye_bbox[2], left_eye_bbox[3],
-            right_eye_info[0], right_eye_info[1],
-            right_eye_bbox[0], right_eye_bbox[1], right_eye_bbox[2], right_eye_bbox[3],
-            rotation_vector_str, translation_vector_str
-        ]
+        img_dir, csv_name, data_row = prepare_eye_gaze_data(user_data_dir, additional_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox)
     
+    return img_dir, csv_name, data_row
+
+def prepare_calibration_data(user_data_dir, calibration_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox):
+    img_dir = f'{user_data_dir}calibration_images/'
+    csv_name = f'{user_data_dir}calibration_data.csv'
+    data_row = format_calibration_data_row(calibration_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox)
+    return img_dir, csv_name, data_row
+
+def prepare_eye_gaze_data(user_data_dir, eye_gaze_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox):
+    img_dir = f'{user_data_dir}images/'
+    csv_name = f'{user_data_dir}data.csv'
+    data_row = format_eye_gaze_data_row(eye_gaze_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox)
+    return img_dir, csv_name, data_row
+
+def format_calibration_data_row(calibration_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox):
+    calibration_points, _ = calibration_data  # Assuming calibration_data contains calibration points and screen data
+    head_pose = None  # Based on your initial code, head_pose seems to be None for calibration
+    rotation_vector, translation_vector = head_pose if head_pose else (np.zeros((3, 1)), np.zeros((3, 1)))
+
+    rotation_vector_str = ','.join(map(str, rotation_vector.flatten()))
+    translation_vector_str = ','.join(map(str, translation_vector.flatten()))
+
+    data_row = [
+        calibration_points[0], calibration_points[1],  # X, Y coordinates of calibration point
+        left_eye_info[0], left_eye_info[1],
+        *left_eye_bbox,
+        right_eye_info[0], right_eye_info[1],
+        *right_eye_bbox,
+        rotation_vector_str, translation_vector_str
+    ]
+    return data_row
+
+
+def format_eye_gaze_data_row(eye_gaze_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox):
+    cursor_x, cursor_y, _, head_pose = eye_gaze_data  # Assuming eye_gaze_data contains these elements
+    rotation_vector, translation_vector = head_pose if head_pose else (np.zeros((3, 1)), np.zeros((3, 1)))
+
+    rotation_vector_str = ','.join(map(str, rotation_vector.flatten()))
+    translation_vector_str = ','.join(map(str, translation_vector.flatten()))
+
+    data_row = [
+        cursor_x, cursor_y,
+        left_eye_info[0], left_eye_info[1],
+        *left_eye_bbox,
+        right_eye_info[0], right_eye_info[1],
+        *right_eye_bbox,
+        rotation_vector_str, translation_vector_str
+    ]
+    return data_row
+
+
+def update_metadata_if_changed(bucket_name, metadata_file, screen_data, s3_client):
     if screen_data_changed(bucket_name, metadata_file, screen_data, s3_client):
         # Handle the change here, like updating the metadata in S3
         if screen_data != None and len(screen_data) > 0 and screen_data !='null':
@@ -132,37 +166,42 @@ def capture_and_save(user_id, original_frame, left_eye_info, right_eye_info, lef
                 logging.error(f"Error updating metadata in S3: {e}")
 
 
+def upload_image_and_update_csv(s3_client, bucket_name, user_id, img_dir, original_frame, csv_name, data_row):
     img_name = f'{img_dir}{user_id}_{int(time.time())}.png'
-    data_row.insert(0, img_name)  # Insert the image name at the beginning of the row
-    
-    _, buffer = cv2.imencode('.png', original_frame)
-    img_bytes = BytesIO(buffer)
+    upload_image_to_s3(s3_client, bucket_name, img_name, original_frame)
+    append_data_to_csv(s3_client, bucket_name, csv_name, data_row, img_name)
 
-    # Upload image to S3
+def upload_image_to_s3(s3_client, bucket_name, img_name, original_frame):
     try:
+        _, buffer = cv2.imencode('.png', original_frame)
+        img_bytes = BytesIO(buffer)
         s3_client.upload_fileobj(img_bytes, bucket_name, img_name)
         logging.info(f"Successfully uploaded {img_name} to S3.")
     except Exception as e:
         logging.error(f"Error uploading to S3: {e}")
 
-    csv_data = StringIO()
-    writer = csv.writer(csv_data)
-    writer.writerow(data_row)
-    csv_data.seek(0)
-
-    # Append to existing CSV file or create a new one if it doesn't exist
+def append_data_to_csv(s3_client, bucket_name, csv_name, data_row, img_name):
     try:
-        existing_data = ''
-        try:
-            existing_data = s3_client.get_object(Bucket=bucket_name, Key=csv_name)['Body'].read().decode('utf-8')
-        except s3_client.exceptions.NoSuchKey:
-            logging.info("CSV file does not exist. A new file will be created.")
-
-        all_data = existing_data + csv_data.getvalue()
+        existing_data = get_existing_csv_data(s3_client, bucket_name, csv_name)
+        all_data = existing_data + format_csv_data(data_row, img_name)
         s3_client.put_object(Body=all_data, Bucket=bucket_name, Key=csv_name)
         logging.info("Successfully appended to CSV in S3.")
     except Exception as e:
         logging.error(f"Error updating CSV in S3: {e}")
+
+def get_existing_csv_data(s3_client, bucket_name, csv_name):
+    try:
+        return s3_client.get_object(Bucket=bucket_name, Key=csv_name)['Body'].read().decode('utf-8')
+    except s3_client.exceptions.NoSuchKey:
+        logging.info("CSV file does not exist. A new file will be created.")
+        return ''
+
+def format_csv_data(data_row, img_name):
+    csv_data = StringIO()
+    writer = csv.writer(csv_data)
+    writer.writerow([img_name] + data_row)
+    csv_data.seek(0)
+    return csv_data.getvalue()
 
 
 def screen_data_changed(bucket_name, metadata_file, screen_data, s3_client):
@@ -180,4 +219,3 @@ def screen_data_changed(bucket_name, metadata_file, screen_data, s3_client):
     except Exception as e:
         logging.error(f"Error accessing S3: {e}")
         return True
-

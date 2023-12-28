@@ -9,9 +9,9 @@ class TestS3BucketIntegration(unittest.TestCase):
 
         # Prepare the test data with JSON strings
         data = {
-            'userId': 'test_user3',
-            'calibrationPoints': '[8, 9]',  # Convert list to JSON string
-            'screenData': '[1080, 1980]'  # Convert list to JSON string
+            'userId': 'test_user',
+            'calibrationPoints': '[80, 9]',  # Convert list to JSON string
+            'screenData': '[1080, 1780]'  # Convert list to JSON string
         }
 
         # Prepare the test file - Ensure the file exists at the specified path
