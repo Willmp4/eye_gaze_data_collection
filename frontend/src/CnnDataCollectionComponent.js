@@ -7,12 +7,6 @@ function CameraComponent({ userId }) {
   const { videoRef, captureImage } = useCamera(); // Using the custom hook
   const currentCursorPosition = useRef({ x: 0, y: 0 });
 
-  const screenData = {
-    screenWidth: window.screen.width,
-    screenHeight: window.screen.height,
-    devicePixelRatio: window.devicePixelRatio,
-  };
-
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.keyCode === 32 && userId) {
@@ -23,7 +17,6 @@ function CameraComponent({ userId }) {
             const additionalData = {
               userId,
               cursorPosition: currentCursorPosition.current,
-              screenData,
             };
             sendImageToServer(blob, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/process-image", additionalData);
           })
