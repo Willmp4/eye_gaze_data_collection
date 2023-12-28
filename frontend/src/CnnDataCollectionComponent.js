@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "./CameraComponent.css";
 import useCamera from "./useCamera"; // Assuming you have this hook
 import sendImageToServer from "./sendImageToServer";
