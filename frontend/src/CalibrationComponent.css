@@ -1,0 +1,15 @@
+.calibration-container {
+    position: relative;
+    width: 100%; /* or the desired width */
+    height: 500px; /* or the desired height */
+  }
+  
+  .calibration-point {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: red;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+  

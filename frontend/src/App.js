@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import "./App.css";
-import CameraComponent from "./useCamera"; // Make sure the path is correct
+import CameraComponent from "./CnnDataCollectionComponent"; // Make sure the path is correct
 import { Button } from "react-bootstrap";
-import useCalibration from "./useCalibration";
+import CalibrationComponent from "./CalibrationComponent";
 
 function App() {
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isCalibrationComplete, setIsCalibrationComplete] = useState(false);
+
+  const handleCalibrationComplete = () => {
+    setIsCalibrationComplete(true);
+  };
 
   const handleFullScreen = () => {
-    // Implement full-screen toggle logic
     if (!isFullScreen) {
       document.documentElement.requestFullscreen();
     } else {
@@ -23,8 +27,7 @@ function App() {
       <p>Enter your usename in the box before anything.</p>
       <p>Please go fullscreen and look at the cursor before pressing the space bar.</p>
       <Button onClick={handleFullScreen}>{isFullScreen ? "Exit Full Screen" : "Go Full Screen"}</Button>
-      <useCalibration />
-      <CameraComponent />
+      {!isCalibrationComplete ? <CalibrationComponent onCalibrationComplete={handleCalibrationComplete} /> : <CameraComponent />}
     </div>
   );
 }

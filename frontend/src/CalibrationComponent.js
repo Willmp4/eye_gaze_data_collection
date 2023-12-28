@@ -1,12 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
+import "./CalibrationComponent.css";
 
-function useCalibration({ onCalibrationComplete }) {
+function CalibrationComponent({ onCalibrationComplete }) {
   const videoRef = useRef(null);
   const [calibrationPoints, setCalibrationPoints] = useState([]);
   const [currentPoint, setCurrentPoint] = useState(0);
 
   useEffect(() => {
-    setCalibrationPoints(generateCalibrationPoints());
+    const updatedCalibrationPoints = generateCalibrationPoints();
+    setCalibrationPoints(updatedCalibrationPoints);
+    console.log("Calibration Points: ", updatedCalibrationPoints);
   }, []);
 
   useEffect(() => {
@@ -26,7 +29,8 @@ function useCalibration({ onCalibrationComplete }) {
   };
 
   const handleSpaceBar = async () => {
-    if (currentPoint < calibrationPoints.length) {
+    if (currentPoint < calibrationPoints.length - 1) {
+      console.log("Current Point: ", currentPoint);
       const point = calibrationPoints[currentPoint];
       //   await caputreAndSendImage(point);
       setCurrentPoint(currentPoint + 1);
@@ -36,18 +40,20 @@ function useCalibration({ onCalibrationComplete }) {
   };
 
   useEffect(() => {
-    window.addEventListener("keydown", (event) => {
+    const keyDownHandler = (event) => {
       if (event.keyCode === 32) {
         handleSpaceBar();
       }
-    });
+    };
+
+    window.addEventListener("keydown", keyDownHandler);
     return () => {
-      window.removeEventListener("keydown", () => {});
+      window.removeEventListener("keydown", keyDownHandler);
     };
   }, [currentPoint, calibrationPoints]);
 
   return (
-    <div className=";claibration-containter">
+    <div className="calibration-containter">
       <video ref={videoRef} className="video-feed" />
       {calibrationPoints.length > 0 && (
         <div
@@ -62,4 +68,4 @@ function useCalibration({ onCalibrationComplete }) {
   );
 }
 
-export default useCalibration;
+export default CalibrationComponent;
