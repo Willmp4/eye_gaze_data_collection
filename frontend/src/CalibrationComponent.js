@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./CalibrationComponent.css";
+import useCamera from "./useCamera";
 
 function CalibrationComponent({ onCalibrationComplete }) {
-  const videoRef = useRef(null);
   const [calibrationPoints, setCalibrationPoints] = useState([]);
   const [currentPoint, setCurrentPoint] = useState(0);
+  const { videoRef, captureImage } = useCamera();
 
   useEffect(() => {
     const updatedCalibrationPoints = generateCalibrationPoints();
@@ -12,18 +13,9 @@ function CalibrationComponent({ onCalibrationComplete }) {
     console.log("Calibration Points: ", updatedCalibrationPoints);
   }, []);
 
-  useEffect(() => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      });
-    }
-  }, []);
-
   const generateCalibrationPoints = () => {
     return [
-      { x: 100, y: 100 },
+      { x: 0, y: 0 },
       { x: 200, y: 200 },
     ];
   };
@@ -32,7 +24,7 @@ function CalibrationComponent({ onCalibrationComplete }) {
     if (currentPoint < calibrationPoints.length - 1) {
       console.log("Current Point: ", currentPoint);
       const point = calibrationPoints[currentPoint];
-      //   await caputreAndSendImage(point);
+      await captureImage();
       setCurrentPoint(currentPoint + 1);
     } else {
       onCalibrationComplete();
