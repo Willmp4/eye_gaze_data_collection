@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./CalibrationComponent.css";
 import useCamera from "./useCamera";
 import sendImageToServer from "./sendImageToServer";
@@ -15,32 +15,10 @@ function CalibrationComponent({ onCalibrationComplete }) {
     console.log("Calibration Points: ", updatedCalibrationPoints);
   }, []);
 
-  const generateCalibrationPoints = () => {
-    return [
-      { x: 0, y: 0 },
-      { x: 200, y: 200 },
-    ];
-  };
-
-  const handleSpaceBar = async () => {
-    if (currentPoint < calibrationPoints.length - 1) {
-      const point = calibrationPoints[currentPoint];
-      const blob = await captureImage();
-      const additionalData = {
-        calibrationPoint: point,
-        userId: userId,
-      };
-      await sendImageToServer(blob, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/calibrate", additionalData);
-      setCurrentPoint(currentPoint + 1);
-    } else {
-      onCalibrationComplete();
-    }
-  };
-
   useEffect(() => {
-    const keyDownHandler = (event) => {
-      if (event.keyCode === 32) {
-        handleSpaceBar();
+    const keyDownHandler = async (event) => {
+      if (event.keyCode === 32 && userId) {
+        await handleSpaceBar();
       }
     };
 
@@ -48,7 +26,39 @@ function CalibrationComponent({ onCalibrationComplete }) {
     return () => {
       window.removeEventListener("keydown", keyDownHandler);
     };
-  }, [currentPoint, calibrationPoints]);
+    // Make sure to include all the dependencies required for the effect to work correctly
+  }, [currentPoint, calibrationPoints, userId]);
+
+  const generateCalibrationPoints = () => {
+    // Your logic to generate calibration points
+    return [
+      { x: 0, y: 0 },
+      { x: 200, y: 200 },
+    ];
+  };
+
+  const handleSpaceBar = async () => {
+    if (currentPoint < calibrationPoints.length) {
+      const point = calibrationPoints[currentPoint];
+      console.log("Point: ", point);
+      try {
+        const blob = await captureImage();
+        const additionalData = {
+          calibrationPoints: [point.x, point.y],
+          userId: userId,
+        };
+        await sendImageToServer(blob, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/calibrate", additionalData);
+        // Move to the next point or complete the calibration
+        if (currentPoint < calibrationPoints.length - 1) {
+          setCurrentPoint(currentPoint + 1);
+        } else {
+          onCalibrationComplete();
+        }
+      } catch (error) {
+        console.error("Error capturing or sending image:", error);
+      }
+    }
+  };
 
   return (
     <div className="calibration-containter">
