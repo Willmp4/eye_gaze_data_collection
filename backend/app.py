@@ -68,7 +68,9 @@ def index():
 @app.route('/calibrate', methods=['POST'])
 def calibrate():
     user_id = request.form.get('userId')
-    calibration_points = json.loads(request.form.get('calibrationPoints'))  # Fixed typo here
+    calibration_points = json.loads(request.form.get('calibrationPoints')) 
+    screen_data = json.loads(request.form.get('screenData')) if request.form.get('screenData') else None
+
     file = request.files['image']
 
     if file.filename == '':
@@ -82,11 +84,8 @@ def calibrate():
     processed_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox = pre_process_image(image)
 
     if left_eye_info and right_eye_info:
-        # Package the additional data into a single tuple or dictionary
-         # 'None' for head_pose, modify as per your logic
-
-        # Call capture_and_save with the new structure
-        capture_and_save(user_id, image, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox, calibration_points, 'calibration')
+        additional_data = [calibration_points, screen_data]
+        capture_and_save(user_id, image, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox, additional_data, 'calibration')
         logging.info("Eye-gaze data saved successfully!")
 
     return jsonify({'message': "Calibration image processed successfully!", "data": processed_data})

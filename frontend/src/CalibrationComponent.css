@@ -1,0 +1,38 @@
+
+
+.calibration-container {
+  text-align: center;
+  width: 100%;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Adds a subtle shadow */
+  background: white; /* Background for content */
+  border-radius: 8px; /* Rounded corners */
+  margin: 20px;
+}
+
+.calibration-point {
+  position: fixed;
+  width: 15px;
+  height: 15px;
+  background-color: red;
+  border-radius: 50%;
+}
+.calibration-container.success {
+  outline: 2px solid green;
+  outline-offset: -2px; /* To draw the outline inside of the element */
+  animation: fadeOut 2s;
+}
+
+.calibration-container.error {
+  outline: 2px solid red;
+  outline-offset: -2px; /* To draw the outline inside of the element */
+  animation: fadeOut 2s;
+}
+
+
+@keyframes fadeOut {
+  from { outline-opacity: 1; }
+  to { outline-opacity: 0; }
+}
+  
+  

@@ -5,13 +5,13 @@ import json
 class TestS3BucketIntegration(unittest.TestCase):
     def test_post_to_process_image_endpoint(self):
         # URL of your Flask app's /process-image endpoint
-        url = 'http://localhost:5000/process-image'
+        url = 'http://localhost:5000/calibrate'
 
         # Prepare the test data with JSON strings
         data = {
-            'userId': 'test_user4',
-            'cursorPosition': '{"x": 1, "y": 2}',  # Convert to JSON string
-            'screenData': '[1080, 1920]',  # Convert to JSON string
+            'userId': 'test_user',
+            'calibrationPoints': '[80, 9]',  # Convert list to JSON string
+            'screenData': '[1080, 1780]'  # Convert list to JSON string
         }
 
         # Prepare the test file - Ensure the file exists at the specified path
