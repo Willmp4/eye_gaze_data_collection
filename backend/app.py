@@ -68,7 +68,9 @@ def index():
 @app.route('/calibrate', methods=['POST'])
 def calibrate():
     user_id = request.form.get('userId')
-    calibration_points = json.loads(request.form.get('calibrationPoints'))  # Fixed typo here
+    calibration_points = json.loads(request.form.get('calibrationPoints')) 
+    screen_data = json.loads(request.form.get('screenData')) if request.form.get('screenData') else None
+
     file = request.files['image']
 
     if file.filename == '':

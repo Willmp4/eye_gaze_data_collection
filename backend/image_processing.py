@@ -106,8 +106,7 @@ def capture_and_save(user_id, original_frame, left_eye_info, right_eye_info, lef
     if data_type == 'calibration':
         img_dir = f'{user_data_dir}calibration_images/'
         csv_name = f'{user_data_dir}calibration_data.csv'
-        calibration_points = additional_data
-        screen_data = None
+        calibration_points, screen_data = additional_data
         head_pose = None
         rotation_vector, translation_vector = head_pose if head_pose else (np.zeros((3,1)), np.zeros((3,1)))
         rotation_vector_str = ','.join(map(str, rotation_vector.flatten()))
