@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import "./CameraComponent.css";
 import useCamera from "./useCamera"; // Assuming you have this hook
 import sendImageToServer from "./sendImageToServer";
@@ -37,6 +37,7 @@ function CameraComponent({ userId }) {
       document.removeEventListener("mousemove", updateCursorPosition);
       window.removeEventListener("keydown", handleKeyDown);
     };
+    // eslint-disable-next-line
   }, [userId]);
 
   return (
