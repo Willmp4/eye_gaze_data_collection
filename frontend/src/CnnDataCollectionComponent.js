@@ -3,8 +3,7 @@ import "./CameraComponent.css";
 import useCamera from "./useCamera"; // Assuming you have this hook
 import sendImageToServer from "./sendImageToServer";
 
-function CameraComponent() {
-  const [userId, setUserId] = useState(null);
+function CameraComponent({ userId }) {
   const { videoRef, captureImage } = useCamera(); // Using the custom hook
   const currentCursorPosition = useRef({ x: 0, y: 0 });
 
@@ -49,7 +48,6 @@ function CameraComponent() {
 
   return (
     <div className="camera-container">
-      <input type="text" placeholder="Enter User ID" value={userId} onChange={(e) => setUserId(e.target.value)} className="user-id-input" />
       <video ref={videoRef} className="video-feed" />
     </div>
   );

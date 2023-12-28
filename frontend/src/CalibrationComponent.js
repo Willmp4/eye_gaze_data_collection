@@ -3,11 +3,10 @@ import "./CalibrationComponent.css";
 import useCamera from "./useCamera";
 import sendImageToServer from "./sendImageToServer";
 
-function CalibrationComponent({ onCalibrationComplete }) {
+function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   const [calibrationPoints, setCalibrationPoints] = useState([]);
   const [currentPoint, setCurrentPoint] = useState(0);
   const { videoRef, captureImage } = useCamera();
-  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const updatedCalibrationPoints = generateCalibrationPoints();

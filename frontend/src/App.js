@@ -7,6 +7,7 @@ import CalibrationComponent from "./CalibrationComponent";
 function App() {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isCalibrationComplete, setIsCalibrationComplete] = useState(false);
+  const [userId, setUserId] = useState(null);
 
   const handleCalibrationComplete = () => {
     setIsCalibrationComplete(true);
@@ -27,8 +28,11 @@ function App() {
       <p>Enter your usename in the box before anything.</p>
       <p>Please go fullscreen and look at the cursor before pressing the space bar.</p>
       <Button onClick={handleFullScreen}>{isFullScreen ? "Exit Full Screen" : "Go Full Screen"}</Button>
-      {!isCalibrationComplete ? <CalibrationComponent onCalibrationComplete={handleCalibrationComplete} /> : <CameraComponent />}
-      {/* <CameraComponent /> */}
+      {!isCalibrationComplete ? (
+        <CalibrationComponent onCalibrationComplete={handleCalibrationComplete} userId={userId} setUserId={setUserId} />
+      ) : (
+        <CameraComponent userId={userId}/>
+      )}
     </div>
   );
 }
