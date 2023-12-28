@@ -13,14 +13,26 @@ const useCamera = () => {
   }, []);
 
   const captureImage = (onCapture = (blob) => {}) => {
-    return new Promise((resolve) => {
+    console.log("captureImage");
+    return new Promise((resolve, reject) => {
+      console.log("captureImage promise");
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      if (videoRef) {
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-      canvas.toBlob(onCapture);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("videoRef is null"));
+          }
+        });
+      } else {
+        reject(new Error("videoRef is null"));
+      }
     });
   };
   return { videoRef, captureImage };

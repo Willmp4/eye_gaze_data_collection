@@ -17,15 +17,20 @@ function CameraComponent() {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.keyCode === 32 && userId) {
+        console.log("space bar pressed");
         // space bar code
-        captureImage().then((blob) => {
-          const additionalData = {
-            userId,
-            cursorPosition: currentCursorPosition.current,
-            screenData,
-          };
-          sendImageToServer(blob, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/process-image", additionalData);
-        });
+        captureImage()
+          .then((blob) => {
+            const additionalData = {
+              userId,
+              cursorPosition: currentCursorPosition.current,
+              screenData,
+            };
+            sendImageToServer(blob, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/process-image", additionalData);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       }
     };
 
