@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./CalibrationComponent.css";
 import useCamera from "./useCamera";
+import sendImageToServer from "./sendImageToServer";
 
 function CalibrationComponent({ onCalibrationComplete }) {
   const [calibrationPoints, setCalibrationPoints] = useState([]);
   const [currentPoint, setCurrentPoint] = useState(0);
   const { videoRef, captureImage } = useCamera();
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const updatedCalibrationPoints = generateCalibrationPoints();
@@ -22,9 +24,13 @@ function CalibrationComponent({ onCalibrationComplete }) {
 
   const handleSpaceBar = async () => {
     if (currentPoint < calibrationPoints.length - 1) {
-      console.log("Current Point: ", currentPoint);
       const point = calibrationPoints[currentPoint];
-      await captureImage();
+      const blob = await captureImage();
+      const additionalData = {
+        calibrationPoint: point,
+        userId: userId,
+      };
+      await sendImageToServer(blob, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/calibrate", additionalData);
       setCurrentPoint(currentPoint + 1);
     } else {
       onCalibrationComplete();
@@ -47,6 +53,7 @@ function CalibrationComponent({ onCalibrationComplete }) {
   return (
     <div className="calibration-containter">
       <video ref={videoRef} className="video-feed" />
+      <input type="text" placeholder="Enter User ID" value={userId} onChange={(e) => setUserId(e.target.value)} className="user-id-input" />
       {calibrationPoints.length > 0 && (
         <div
           className="calibration-point"

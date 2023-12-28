@@ -13,13 +13,15 @@ const useCamera = () => {
   }, []);
 
   const captureImage = (onCapture = (blob) => {}) => {
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    return new Promise((resolve) => {
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-    canvas.toBlob(onCapture);
+      canvas.toBlob(onCapture);
+    });
   };
   return { videoRef, captureImage };
 };
