@@ -6,3 +6,26 @@
     padding: 20px; /* Add some padding around the video */
   }
   
+  .camera-container.processing .video-feed {
+    outline: 2px solid yellow; /* Yellow outline for processing */
+  }
+  
+  .camera-container.success .video-feed {
+    outline: 2px solid green; /* Green outline for success */
+  }
+  
+  .camera-container.error .video-feed {
+    outline: 2px solid red; /* Red outline for error */
+  }
+  
+  .processing-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+  }
+  

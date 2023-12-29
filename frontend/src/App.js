@@ -25,14 +25,21 @@ function App() {
   return (
     <div className={isFullScreen ? "App fullscreen" : "App"}>
       <h1>Welcome to the Gaze Capture App</h1>
-      <p>Enter your usename in the box before anything.</p>
-      <p>Please go fullscreen and look at the cursor before pressing the space bar.</p>
-      <Button onClick={handleFullScreen}>{isFullScreen ? "Exit Full Screen" : "Go Full Screen"}</Button>
+
       {!isCalibrationComplete ? (
-        <CalibrationComponent onCalibrationComplete={handleCalibrationComplete} userId={userId} setUserId={setUserId} />
+        <>
+          <p>Enter your username in the box before anything.</p>
+          <p>Look at the red dots and then press space bar to take the pictures for the calibration.</p>
+          <CalibrationComponent onCalibrationComplete={handleCalibrationComplete} userId={userId} setUserId={setUserId} />
+        </>
       ) : (
-        <CameraComponent userId={userId}/>
+        <>
+          <p>Look at the cursor and then press the space bar to take the pictures.</p>
+          <CameraComponent userId={userId} />
+        </>
       )}
+
+      <Button onClick={handleFullScreen}>{isFullScreen ? "Exit Full Screen" : "Go Full Screen"}</Button>
     </div>
   );
 }
