@@ -18,9 +18,9 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   useEffect(() => {
     const updatedCalibrationPoints = generateCalibrationPoints();
     setCalibrationPoints(updatedCalibrationPoints);
-    console.log("Calibration Points: ", updatedCalibrationPoints);
+    // eslint-disable-next-line
   }, []);
-
+  // eslint-disable-next-line
   useEffect(() => {
     const keyDownHandler = async (event) => {
       if (event.keyCode === 32 && userId) {
@@ -35,23 +35,32 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
     // Make sure to include all the dependencies required for the effect to work correctly
     // eslint-disable-next-line
   }, [currentPoint, calibrationPoints, userId]);
-
   const generateCalibrationPoints = () => {
-    // Your logic to generate calibration points
-    return [
-      { x: 0, y: 0 },
-      { x: 200, y: 200 },
-      { x: 0, y: screenHeight - 1 },
-      { x: screenWidth - 1, y: 0 },
-      { x: screenWidth - 1, y: screenHeight - 1 },
-      { x: screenWidth / 2, y: screenHeight / 2 },
-      { x: screenWidth / 4, y: screenHeight / 4 },
-      { x: screenWidth / 4, y: (screenHeight / 4) * 3 },
-      { x: (screenWidth / 4) * 3, y: screenHeight / 4 },
-      { x: (screenWidth / 4) * 3, y: (screenHeight / 4) * 3 },
-    ];
-  };
+    const offset = 20; // Offset from the edges
 
+    const points = [
+      { x: offset, y: offset }, // Adjusted from 0,0 to be within the screen
+      { x: offset, y: screenData.screenHeight - offset },
+      { x: screenData.screenWidth - offset, y: offset },
+      { x: screenData.screenWidth - offset, y: screenData.screenHeight - offset },
+    ];
+
+    const numCentralPoints = 46; // Number of points to be placed in the center
+    const centralPointsPerSide = Math.ceil(Math.sqrt(numCentralPoints));
+
+    const stepX = (screenData.screenWidth - 2 * offset) / (centralPointsPerSide + 1);
+    const stepY = (screenData.screenHeight - 2 * offset) / (centralPointsPerSide + 1);
+
+    for (let i = 1; i <= centralPointsPerSide; i++) {
+      for (let j = 1; j <= centralPointsPerSide; j++) {
+        const x = offset + i * stepX;
+        const y = offset + j * stepY;
+        points.push({ x, y });
+      }
+    }
+
+    return points;
+  };
   const handleSpaceBar = async () => {
     if (currentPoint < calibrationPoints.length) {
       const point = calibrationPoints[currentPoint];

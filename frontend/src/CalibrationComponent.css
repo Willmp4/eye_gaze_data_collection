@@ -2,12 +2,7 @@
 
 .calibration-container {
   text-align: center;
-  width: 100%;
-  padding: 20px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Adds a subtle shadow */
   background: white; /* Background for content */
-  border-radius: 8px; /* Rounded corners */
-  margin: 20px;
 }
 
 .calibration-point {
