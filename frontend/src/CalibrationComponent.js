@@ -41,6 +41,14 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
     return [
       { x: 0, y: 0 },
       { x: 200, y: 200 },
+      { x: 0, y: screenHeight - 1 },
+      { x: screenWidth - 1, y: 0 },
+      { x: screenWidth - 1, y: screenHeight - 1 },
+      { x: screenWidth / 2, y: screenHeight / 2 },
+      { x: screenWidth / 4, y: screenHeight / 4 },
+      { x: screenWidth / 4, y: (screenHeight / 4) * 3 },
+      { x: (screenWidth / 4) * 3, y: screenHeight / 4 },
+      { x: (screenWidth / 4) * 3, y: (screenHeight / 4) * 3 },
     ];
   };
 
