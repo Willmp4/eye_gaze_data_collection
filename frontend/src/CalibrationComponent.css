@@ -3,6 +3,22 @@
 .calibration-container {
   text-align: center;
   background: white; /* Background for content */
+  display: flex; /* Using Flexbox for layout */
+  flex-direction: column; /* Stack children vertically */
+  align-items: center; /* Center-align items horizontally */
+  justify-content: center; /* Center-align items vertically */
+}
+
+.video-feed {
+  /* Adjust as needed for your specific requirements */
+  max-width: 90%; /* Limit the width to prevent overflow */
+  margin-bottom: 20px; /* Space between the video feed and the input box */
+}
+
+.user-id-input {
+  width: 10%; /* Adjust width as per requirement */
+  padding: 10px; /* Add padding for better aesthetics */
+  margin-bottom: 20px; /* Space below the input box */
 }
 
 .calibration-point {
@@ -12,6 +28,7 @@
   background-color: red;
   border-radius: 50%;
 }
+
 .calibration-container.success {
   outline: 2px solid green;
   outline-offset: -2px; /* To draw the outline inside of the element */
@@ -23,7 +40,6 @@
   outline-offset: -2px; /* To draw the outline inside of the element */
   animation: fadeOut 2s;
 }
-
 
 @keyframes fadeOut {
   from { outline-opacity: 1; }

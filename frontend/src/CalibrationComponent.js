@@ -53,14 +53,15 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
 
     for (let i = 1; i <= centralPointsPerSide; i++) {
       for (let j = 1; j <= centralPointsPerSide; j++) {
-        const x = offset + i * stepX;
-        const y = offset + j * stepY;
+        const x = Math.round(offset + i * stepX);
+        const y = Math.round(offset + j * stepY);
         points.push({ x, y });
       }
     }
 
     return points;
   };
+
   const handleSpaceBar = async () => {
     if (currentPoint < calibrationPoints.length) {
       const point = calibrationPoints[currentPoint];
