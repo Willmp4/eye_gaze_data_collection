@@ -46,8 +46,7 @@ function CameraComponent({ userId }) {
       window.removeEventListener("keydown", handleKeyDown);
       updateCursorPosition.cancel(); // Cancel the debounced call if component unmounts
     };
-    // eslint-disable-next-line
-  }, [userId]);
+  }, [userId, captureImage]);
 
   return (
     <div className={`camera-container ${processing}`}>
