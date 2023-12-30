@@ -3,6 +3,7 @@ import "./App.css";
 import CameraComponent from "./CnnDataCollectionComponent"; // Make sure the path is correct
 import { Button } from "react-bootstrap";
 import CalibrationComponent from "./CalibrationComponent";
+import UserGuideModal from "./userGuide";
 
 function App() {
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -25,6 +26,8 @@ function App() {
   return (
     <div className={isFullScreen ? "App fullscreen" : "App"}>
       <h1>Welcome to the Gaze Capture App</h1>
+
+      <UserGuideModal />
 
       {!isCalibrationComplete ? (
         <>
