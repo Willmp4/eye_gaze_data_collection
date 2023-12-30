@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import "./CameraComponent.css";
 import useCamera from "./useCamera"; // Assuming you have this hook
 import sendImageToServer from "./sendImageToServer";
+// import debounce from "lodash.debounce";
+import { debounce } from "lodash";
 
 function CameraComponent({ userId }) {
   const { videoRef, captureImage } = useCamera(); // Using the custom hook
@@ -32,9 +34,9 @@ function CameraComponent({ userId }) {
       }
     };
 
-    const updateCursorPosition = (event) => {
+    const updateCursorPosition = debounce((event) => {
       currentCursorPosition.current = { x: event.screenX, y: event.screenY };
-    };
+    }, 250);
 
     window.addEventListener("keydown", handleKeyDown);
     document.addEventListener("mousemove", updateCursorPosition);
