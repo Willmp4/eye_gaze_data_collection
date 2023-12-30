@@ -44,6 +44,7 @@ function CameraComponent({ userId }) {
     return () => {
       document.removeEventListener("mousemove", updateCursorPosition);
       window.removeEventListener("keydown", handleKeyDown);
+      updateCursorPosition.cancel(); // Cancel the debounced call if component unmounts
     };
     // eslint-disable-next-line
   }, [userId]);
