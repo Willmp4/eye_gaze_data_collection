@@ -15,7 +15,7 @@ function CameraComponent({ userId }) {
 
   useEffect(() => {
     const handleKeyDown = async (event) => {
-      if (event.code === "Space" && userId) {
+      if (event.code === 32 && userId) {
         setProcessing("processing");
         console.log("space bar pressed");
         try {
