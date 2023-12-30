@@ -82,8 +82,30 @@ def convert_eye_to_binary(eye_image):
     
     return binary_eye
 
-# s3_client = boto3.client('s3')
-# bucket_name = 'eye-gaze-data'
+def get_head_pose(shape, camera_matrix, dist_coeffs):
+    # Define the model points (the points in a generic 3D model face)
+    model_points = np.array([
+           (0.0, 0.0, 0.0),             # Nose tip
+           (0.0, -330.0, -65.0),        # Chin
+           (-225.0, 170.0, -135.0),     # Left eye left corner
+           (225.0, 170.0, -135.0),      # Right eye right corne
+           (-150.0, -150.0, -125.0),    # Left Mouth corner
+           (150.0, -150.0, -125.0)      # Right mouth corner
+       ])
+   # 2D image points from the facial landmark detection
+    image_points = np.array([
+            (shape.part(30).x, shape.part(30).y),     # Nose tip
+            (shape.part(8).x, shape.part(8).y),       # Chin
+            (shape.part(36).x, shape.part(36).y),     # Left eye left corner
+            (shape.part(45).x, shape.part(45).y),     # Right eye right corner
+            (shape.part(48).x, shape.part(48).y),     # Left Mouth corner
+            (shape.part(54).x, shape.part(54).y)      # Right mouth corner
+        ], dtype="double")
+
+
+    (success, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
+
+    return rotation_vector, translation_vector
 
 def capture_and_save(user_id, original_frame, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox, additional_data, data_type='eye_gaze', s3_client=boto3.client('s3'), bucket_name='eye-gaze-data'):
     user_data_dir = f'data/{user_id}/'
@@ -135,7 +157,6 @@ def format_calibration_data_row(calibration_data, left_eye_info, right_eye_info,
         rotation_vector_str, translation_vector_str
     ]
     return data_row
-
 
 def format_eye_gaze_data_row(eye_gaze_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox):
     cursor_x, cursor_y, _, head_pose = eye_gaze_data  # Assuming eye_gaze_data contains these elements

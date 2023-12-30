@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import "./CalibrationComponent.css";
 import useCamera from "./useCamera";
 import sendImageToServer from "./sendImageToServer";
+import getCameraParameters from "./getCameraParameters";
 
 function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   const [calibrationPoints, setCalibrationPoints] = useState([]);
@@ -46,7 +47,6 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   const handleSpaceBar = useCallback(async () => {
     if (currentPoint < calibrationPoints.length) {
       const point = calibrationPoints[currentPoint];
-      console.log("Point: ", point);
       try {
         const blob = await captureImage();
         const screenData = {
@@ -54,10 +54,13 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
           screenHeight: window.screen.height,
           devicePixelRatio: window.devicePixelRatio,
         };
+        const { cameraMatrix, distCoeffs } = getCameraParameters(videoRef.current);
         const additionalData = {
           calibrationPoints: [point.x, point.y],
           userId: userId,
           screenData: screenData,
+          cameraMatrix: cameraMatrix,
+          distCoeffs: distCoeffs,
         };
         await sendImageToServer(blob, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/calibrate", additionalData);
         // Move to the next point or complete the calibration
