@@ -1,38 +1,39 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./CameraComponent.css";
-import useCamera from "./useCamera";
+import useCamera from "./useCamera"; // Assuming you have this hook
 import sendImageToServer from "./sendImageToServer";
-import debounce from "lodash/debounce"; // Assuming lodash is installed
 
 function CameraComponent({ userId }) {
-  const { videoRef, captureImage } = useCamera();
+  const { videoRef, captureImage } = useCamera(); // Using the custom hook
   const currentCursorPosition = useRef({ x: 0, y: 0 });
-  const [processing, setProcessing] = useState("idle");
-
-  const updateCursorPosition = debounce((event) => {
-    currentCursorPosition.current = { x: event.screenX, y: event.screenY };
-  }, 250); // Debounce the function
+  const [processing, setProcessing] = useState(null);
 
   useEffect(() => {
-    const handleKeyDown = async (event) => {
-      if (event.code === 32 && userId) {
+    const handleKeyDown = (event) => {
+      if (event.keyCode === 32 && userId) {
         setProcessing("processing");
         console.log("space bar pressed");
-        try {
-          const blob = await captureImage();
-          const additionalData = {
-            userId,
-            cursorPosition: currentCursorPosition.current,
-          };
-          await sendImageToServer(blob, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/process-image", additionalData);
-          setProcessing("success");
-        } catch (error) {
-          console.error("Error: ", error);
-          setProcessing("error");
-        } finally {
-          setTimeout(() => setProcessing("idle"), 500);
-        }
+        // space bar code
+        captureImage()
+          .then((blob) => {
+            const additionalData = {
+              userId,
+              cursorPosition: currentCursorPosition.current,
+            };
+            sendImageToServer(blob, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/process-image", additionalData);
+            setProcessing("success");
+            setTimeout(() => setProcessing(null), 500);
+          })
+          .catch((error) => {
+            console.log(error);
+            setProcessing("error");
+            setTimeout(() => setProcessing(null), 500);
+          });
       }
+    };
+
+    const updateCursorPosition = (event) => {
+      currentCursorPosition.current = { x: event.screenX, y: event.screenY };
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -42,7 +43,8 @@ function CameraComponent({ userId }) {
       document.removeEventListener("mousemove", updateCursorPosition);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [userId, captureImage, updateCursorPosition]);
+    // eslint-disable-next-line
+  }, [userId]);
 
   return (
     <div className={`camera-container ${processing}`}>
