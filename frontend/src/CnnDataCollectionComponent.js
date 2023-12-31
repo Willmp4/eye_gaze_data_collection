@@ -4,7 +4,7 @@ import useCamera from "./useCamera"; // Assuming you have this hook
 import sendImageToServer from "./sendImageToServer";
 // import debounce from "lodash.debounce";
 import { debounce } from "lodash";
-
+import getCameraParameters from "./getCameraParameters";
 function CameraComponent({ userId }) {
   const { videoRef, captureImage } = useCamera(); // Using the custom hook
   const currentCursorPosition = useRef({ x: 0, y: 0 });
@@ -18,9 +18,13 @@ function CameraComponent({ userId }) {
         // space bar code
         captureImage()
           .then((blob) => {
+            const { cameraMatrix, distCoeffs } = getCameraParameters(videoRef.current);
+
             const additionalData = {
               userId,
               cursorPosition: currentCursorPosition.current,
+              cameraMatrix: cameraMatrix,
+              distCoeffs: distCoeffs,
             };
             sendImageToServer(blob, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/process-image", additionalData);
             setProcessing("success");
@@ -46,7 +50,7 @@ function CameraComponent({ userId }) {
       window.removeEventListener("keydown", handleKeyDown);
       updateCursorPosition.cancel(); // Cancel the debounced call if component unmounts
     };
-  }, [userId, captureImage]);
+  }, [userId, captureImage, videoRef]);
 
   return (
     <div className={`camera-container ${processing}`}>

@@ -55,6 +55,7 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
           devicePixelRatio: window.devicePixelRatio,
         };
         const { cameraMatrix, distCoeffs } = getCameraParameters(videoRef.current);
+        console.log("cameraMatrix", cameraMatrix);
         const additionalData = {
           calibrationPoints: [point.x, point.y],
           userId: userId,
@@ -77,7 +78,7 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
         console.error("Error capturing or sending image:", error);
       }
     }
-  }, [currentPoint, calibrationPoints, userId, captureImage, onCalibrationComplete]);
+  }, [currentPoint, calibrationPoints, userId, captureImage, onCalibrationComplete, videoRef]);
 
   useEffect(() => {
     const keyDownHandler = async (event) => {
