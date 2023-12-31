@@ -10,8 +10,8 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   const [processing, setProcessing] = useState(null);
 
   const generateCalibrationPoints = useCallback(() => {
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
+    const screenWidth = window.screen.width;
+    const screenHeight = window.screen.height;
     const offset = 20; // Offset from the edges
 
     const points = [
