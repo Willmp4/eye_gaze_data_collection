@@ -9,8 +9,10 @@ class TestS3BucketIntegration(unittest.TestCase):
 
         # Prepare the test data with JSON strings
         data = {
-            'userId': 'test_user',
-            'cursorPosition': '{"x" : 1, "y": 2}',  # Convert list to JSON string
+            'userId': 'cheif',
+            'cursorPosition': '{"x" : 1, "y": 2}',  
+            'cameraMatrix': '[[560,0,320],[0,560,240],[0,0,1]]',
+            'distCoeffs': '[0,0,0,0,0]',
         }
 
         # Prepare the test file - Ensure the file exists at the specified path

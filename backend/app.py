@@ -71,8 +71,13 @@ def calibrate():
     user_id = request.form.get('userId')
     calibration_points = json.loads(request.form.get('calibrationPoints')) 
     screen_data = json.loads(request.form.get('screenData')) if request.form.get('screenData') else None
-    camera_matrix = json.loads(request.form.get('cameraMatrix')) if request.form.get('cameraMatrix') else None
-    dist_coeffs = json.loads(request.form.get('distCoeffs')) if request.form.get('distCoeffs') else None
+    camera_matrix_str = request.form.get('cameraMatrix')
+    dist_coeffs_str = request.form.get('distCoeffs')
+    
+    # Parse camera matrix and distortion coefficients as numpy arrays
+    camera_matrix = np.array(json.loads(camera_matrix_str)) if camera_matrix_str else None
+    dist_coeffs = np.array(json.loads(dist_coeffs_str)) if dist_coeffs_str else None
+
 
     file = request.files['image']
 
@@ -88,7 +93,7 @@ def calibrate():
     rotation_vector, translation_vector = get_head_pose(shape, camera_matrix, dist_coeffs)
 
     if left_eye_info and right_eye_info:
-        additional_data = [calibration_points, screen_data]
+        additional_data = [calibration_points, screen_data, (rotation_vector, translation_vector)]
         capture_and_save(user_id, image, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox, additional_data, 'calibration')
         logging.info("Eye-gaze data saved successfully!")
 
@@ -105,8 +110,12 @@ def process_image():
         return jsonify({'message': "No image found!", "data": {}}), 400
     
     user_id = request.form.get('userId')
-    camera_matrix = json.loads(request.form.get('cameraMatrix')) if request.form.get('cameraMatrix') else None
-    dist_coeffs = json.loads(request.form.get('distCoeffs')) if request.form.get('distCoeffs') else None
+    camera_matrix_str = request.form.get('cameraMatrix')
+    dist_coeffs_str = request.form.get('distCoeffs')
+    
+    # Parse camera matrix and distortion coefficients as numpy arrays
+    camera_matrix = np.array(json.loads(camera_matrix_str)) if camera_matrix_str else None
+    dist_coeffs = np.array(json.loads(dist_coeffs_str)) if dist_coeffs_str else None
 
     cursor_position = json.loads(request.form.get('cursorPosition')) if request.form.get('cursorPosition') else None
     screen_data = json.loads(request.form.get('screenData')) if request.form.get('screenData') else None
@@ -124,9 +133,6 @@ def process_image():
         capture_and_save(user_id, image, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox, additional_data, 'eye-gaze')
         logging.info("Image saved successfully!")
 
-
-
-    
     return jsonify({'message': "Image processed successfully!", "data": processed_data})
 
 

@@ -141,8 +141,7 @@ def prepare_eye_gaze_data(user_data_dir, eye_gaze_data, left_eye_info, right_eye
     return img_dir, csv_name, data_row
 
 def format_calibration_data_row(calibration_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox):
-    calibration_points, _ = calibration_data  # Assuming calibration_data contains calibration points and screen data
-    head_pose = None  # Based on your initial code, head_pose seems to be None for calibration
+    calibration_points, _, head_pose = calibration_data  # Assuming calibration_data contains calibration points and screen data
     rotation_vector, translation_vector = head_pose if head_pose else (np.zeros((3, 1)), np.zeros((3, 1)))
 
     rotation_vector_str = ','.join(map(str, rotation_vector.flatten()))
