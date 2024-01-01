@@ -118,12 +118,7 @@ def process_image():
         capture_and_save(user_id, image, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox, additional_data, 'eye-gaze')
         logging.info("Image saved successfully!")
 
-
-
-    
     return jsonify({'message': "Image processed successfully!", "data": processed_data})
-
-
 
 if __name__ == '__main__':
     app.run()
