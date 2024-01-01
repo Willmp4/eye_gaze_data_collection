@@ -27,7 +27,6 @@ def pre_process_image(image):
     for dlib_face in dlib_faces:
         shape = predictor(gray, dlib_face)
 
-
         for (i, (start, end)) in enumerate([(36,42), (42,48)]):
             eye_image, (eye_min_x, eye_min_y, eye_max_x, eye_max_y) = extract_eye_region(gray, shape, range(start, end))
             eye_image_b = convert_eye_to_binary(eye_image)
