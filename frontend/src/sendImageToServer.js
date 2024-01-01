@@ -1,4 +1,4 @@
-const sendImageToServer = async (cache, url, onCalibrationComplete, clearCache) => {
+const sendImageToServer = async (cache, url, clearCache, afterSubmission) => {
   for (const item of cache) {
     const formData = new FormData();
 
@@ -27,7 +27,9 @@ const sendImageToServer = async (cache, url, onCalibrationComplete, clearCache) 
   }
 
   clearCache(); // Clear the cache after all submissions
-  onCalibrationComplete(); // Call the completion handler
+  if (afterSubmission) {
+    afterSubmission(); // Call the generic completion handler
+  }
 };
 
 export default sendImageToServer;
