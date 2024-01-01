@@ -13,9 +13,7 @@ const useCamera = () => {
   }, []);
 
   const captureImage = (onCapture = (blob) => {}) => {
-    console.log("captureImage");
     return new Promise((resolve, reject) => {
-      console.log("captureImage promise");
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
       if (videoRef) {
