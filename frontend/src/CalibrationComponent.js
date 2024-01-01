@@ -3,12 +3,14 @@ import "./CalibrationComponent.css";
 import useCamera from "./useCamera";
 import sendImageToServer from "./sendImageToServer";
 import getCameraParameters from "./getCameraParameters";
+import useCache from "./useCache";
 
 function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   const [calibrationPoints, setCalibrationPoints] = useState([]);
   const [currentPoint, setCurrentPoint] = useState(0);
   const { videoRef, captureImage } = useCamera();
   const [processing, setProcessing] = useState(null);
+  const { cache, addToCache, clearCache } = useCache();
 
   const generateCalibrationPoints = useCallback(() => {
     const screenWidth = window.screen.width;
@@ -44,6 +46,15 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
     setCalibrationPoints(updatedCalibrationPoints);
   }, [generateCalibrationPoints]);
 
+  const handleSubmitCache = useCallback(async () => {
+    await sendImageToServer(
+      cache,
+      "https://gaze-detection-c70f9bc17dbb.herokuapp.com/calibrate",
+      onCalibrationComplete,
+      clearCache
+    );
+  }, [cache, onCalibrationComplete, clearCache]);
+
   const handleSpaceBar = useCallback(async () => {
     if (currentPoint < calibrationPoints.length) {
       const point = calibrationPoints[currentPoint];
@@ -55,21 +66,24 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
           devicePixelRatio: window.devicePixelRatio,
         };
         const { cameraMatrix, distCoeffs } = getCameraParameters(videoRef.current);
-        console.log("cameraMatrix", cameraMatrix);
-        const additionalData = {
-          calibrationPoints: [point.x, point.y],
+        const cacheItem = {
           userId: userId,
-          screenData: screenData,
-          cameraMatrix: cameraMatrix,
-          distCoeffs: distCoeffs,
+          screenData: JSON.stringify(screenData),
+          calibrationPoints: JSON.stringify([point.x, point.y]),
+          cameraMatrix: JSON.stringify(cameraMatrix),
+          distCoeffs: JSON.stringify(distCoeffs),
+          blob: blob,
         };
-        await sendImageToServer(blob, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/calibrate", additionalData);
+
+        addToCache(cacheItem);
+
         // Move to the next point or complete the calibration
         setProcessing("success");
         setTimeout(() => setProcessing(null), 500);
         if (currentPoint < calibrationPoints.length - 1) {
           setCurrentPoint(currentPoint + 1);
         } else {
+          handleSubmitCache();
           onCalibrationComplete();
         }
       } catch (error) {
@@ -78,7 +92,16 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
         console.error("Error capturing or sending image:", error);
       }
     }
-  }, [currentPoint, calibrationPoints, userId, captureImage, onCalibrationComplete, videoRef]);
+  }, [
+    currentPoint,
+    calibrationPoints,
+    userId,
+    captureImage,
+    onCalibrationComplete,
+    videoRef,
+    addToCache,
+    handleSubmitCache,
+  ]);
 
   useEffect(() => {
     const keyDownHandler = async (event) => {
