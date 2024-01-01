@@ -13,6 +13,7 @@
   /* Adjust as needed for your specific requirements */
   max-width: 90%; /* Limit the width to prevent overflow */
   margin-bottom: 20px; /* Space between the video feed and the input box */
+  transform: scaleX(-1); 
 }
 
 .user-id-input {

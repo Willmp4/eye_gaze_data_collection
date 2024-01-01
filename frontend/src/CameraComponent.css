@@ -5,7 +5,16 @@
     margin: 0 auto; /* Center the video horizontally */
     padding: 20px; /* Add some padding around the video */
   }
+
   
+  .camera-container {
+    text-align: center;
+    background: white; /* Background for content */
+    display: flex; /* Using Flexbox for layout */
+    flex-direction: column; /* Stack children vertically */
+    align-items: center; /* Center-align items horizontally */
+    justify-content: center; /* Center-align items vertically */
+  }
   .camera-container.processing .video-feed {
     outline: 2px solid yellow; /* Yellow outline for processing */
   }
