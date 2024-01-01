@@ -10,6 +10,7 @@ function CameraComponent({ userId }) {
   const currentCursorPosition = useRef({ x: 0, y: 0 });
   const [processing, setProcessing] = useState(null);
   const { cache, addToCache, clearCache } = useCache();
+  const [isCapturing, setIsCapturing] = useState(false);
   const maxCacheSize = 10;
 
   const handleSubmitCache = useCallback(async () => {
@@ -18,7 +19,8 @@ function CameraComponent({ userId }) {
 
   useEffect(() => {
     const handleKeyDown = async (event) => {
-      if (event.keyCode === 32 && userId) {
+      if (event.keyCode === 32 && userId && !isCapturing) {
+        setIsCapturing(true);
         setProcessing("processing");
         try {
           const blob = await captureImage();
@@ -39,6 +41,7 @@ function CameraComponent({ userId }) {
           console.log(error);
           setProcessing("error");
         } finally {
+          setIsCapturing(false);
           setTimeout(() => setProcessing(null), 500);
         }
       }
@@ -64,7 +67,7 @@ function CameraComponent({ userId }) {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [userId, captureImage, videoRef, addToCache, handleSubmitCache, cache.length]);
+  }, [userId, captureImage, videoRef, addToCache, handleSubmitCache, cache.length, isCapturing]);
 
   useEffect(() => {
     if (cache.length >= maxCacheSize) {

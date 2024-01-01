@@ -8,6 +8,7 @@ import time
 import csv
 import json
 import logging
+import uuid
 from io import BytesIO, StringIO
 
 logging.basicConfig(level=logging.DEBUG)
@@ -187,7 +188,8 @@ def update_metadata_if_changed(bucket_name, metadata_file, screen_data, s3_clien
 
 
 def upload_image_and_update_csv(s3_client, bucket_name, user_id, img_dir, original_frame, csv_name, data_row):
-    img_name = f'{img_dir}{user_id}_{int(time.time())}.png'
+    unique_id = uuid.uuid4()
+    img_name = f'{img_dir}{user_id}_{unique_id}.png'
     upload_image_to_s3(s3_client, bucket_name, img_name, original_frame)
     append_data_to_csv(s3_client, bucket_name, csv_name, data_row, img_name)
 
