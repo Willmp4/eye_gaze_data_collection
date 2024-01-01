@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import "./CameraComponent.css";
 import useCamera from "./useCamera"; // Assuming you have this hook
 import sendImageToServer from "./sendImageToServer";
-
 import getCameraParameters from "./getCameraParameters";
+
 function CameraComponent({ userId }) {
   const { videoRef, captureImage } = useCamera(); // Using the custom hook
   const currentCursorPosition = useRef({ x: 0, y: 0 });
