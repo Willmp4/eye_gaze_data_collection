@@ -11,44 +11,50 @@ function CameraComponent({ userId }) {
   const currentCursorPosition = useRef({ x: 0, y: 0 });
   const [processing, setProcessing] = useState(null);
   const { cache, addToCache, clearCache } = useCache();
+  const [isCapturing, setIsCapturing] = useState(false);
   const maxCacheSize = 10;
 
   const handleSubmitCache = useCallback(async () => {
     await sendImageToServer(cache, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/process-image", clearCache);
   }, [cache, clearCache]);
 
-  // Debounced function using useCallback
-  const debouncedHandleKeyDown = useCallback(
-    async (event) => {
-      if (event.keyCode === 32 && userId) {
-        setProcessing("processing");
-        try {
-          const blob = await captureImage();
-          const { cameraMatrix, distCoeffs } = getCameraParameters(videoRef.current);
-          const cacheItem = {
-            userId: userId,
-            cursorPosition: JSON.stringify(currentCursorPosition.current),
-            cameraMatrix: JSON.stringify(cameraMatrix),
-            distCoeffs: JSON.stringify(distCoeffs),
-            blob: blob,
-          };
+  const captureAndProcessImage = async () => {
+    if (isCapturing || !userId) return;
 
-          addToCache(cacheItem);
-          setProcessing("success");
-        } catch (error) {
-          console.log(error);
-          setProcessing("error");
-        } finally {
-          console.log(cache.length);
-          setTimeout(() => setProcessing(null), 500);
-        }
-      }
-    },
-    [userId, captureImage, videoRef, addToCache, cache.length] // Dependencies
-  );
+    setIsCapturing(true);
+    setProcessing("processing");
 
-  // Use debounced function
-  const handleKeyDown = debounce(debouncedHandleKeyDown, 500);
+    try {
+      const blob = await captureImage();
+      const { cameraMatrix, distCoeffs } = getCameraParameters(videoRef.current);
+      const cacheItem = {
+        userId: userId,
+        cursorPosition: JSON.stringify(currentCursorPosition.current),
+        cameraMatrix: JSON.stringify(cameraMatrix),
+        distCoeffs: JSON.stringify(distCoeffs),
+        blob: blob,
+      };
+
+      addToCache(cacheItem);
+      setProcessing("success");
+    } catch (error) {
+      console.log(error);
+      setProcessing("error");
+    } finally {
+      setIsCapturing(false);
+      setTimeout(() => setProcessing(null), 500);
+      console.log(cache.length);
+    }
+  };
+
+  // Debounced function
+  const debouncedCaptureAndProcessImage = debounce(captureAndProcessImage, 500);
+
+  const handleKeyDown = async (event) => {
+    if (event.keyCode === 32) {
+      debouncedCaptureAndProcessImage();
+    }
+  };
 
   useEffect(() => {
     const handleBeforeUnload = async (e) => {
@@ -65,6 +71,7 @@ function CameraComponent({ userId }) {
     window.addEventListener("keydown", handleKeyDown);
     document.addEventListener("mousemove", updateCursorPosition);
     window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
       document.removeEventListener("mousemove", updateCursorPosition);
       window.removeEventListener("keydown", handleKeyDown);
