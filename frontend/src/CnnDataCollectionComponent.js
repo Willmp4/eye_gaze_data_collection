@@ -18,7 +18,7 @@ function CameraComponent({ userId }) {
     await sendImageToServer(cache, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/process-image", clearCache);
   }, [cache, clearCache]);
 
-  const captureAndProcessImage = async () => {
+  const captureAndProcessImage = useCallback(async () => {
     if (isCapturing || !userId) return;
 
     setIsCapturing(true);
@@ -45,16 +45,18 @@ function CameraComponent({ userId }) {
       setTimeout(() => setProcessing(null), 500);
       console.log(cache.length);
     }
-  };
+  }, [userId, isCapturing, captureImage, videoRef, addToCache, cache.length]);
 
-  // Debounced function
   const debouncedCaptureAndProcessImage = debounce(captureAndProcessImage, 500);
 
-  const handleKeyDown = async (event) => {
-    if (event.keyCode === 32) {
-      debouncedCaptureAndProcessImage();
-    }
-  };
+  const handleKeyDown = useCallback(
+    (event) => {
+      if (event.keyCode === 32) {
+        debouncedCaptureAndProcessImage();
+      }
+    },
+    [debouncedCaptureAndProcessImage]
+  );
 
   useEffect(() => {
     const handleBeforeUnload = async (e) => {
