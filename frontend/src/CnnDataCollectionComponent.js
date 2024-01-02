@@ -3,31 +3,48 @@ import "./CameraComponent.css";
 import useCamera from "./useCamera";
 import sendImageToServer from "./sendImageToServer";
 import getCameraParameters from "./getCameraParameters";
-import useCache from "./useCache";
 import { debounce } from "lodash";
+import useCache from "./useCache";
 
 function CameraComponent({ userId }) {
   const { videoRef, captureImage } = useCamera();
   const currentCursorPosition = useRef({ x: 0, y: 0 });
   const [processing, setProcessing] = useState(null);
   const { cache, addToCache, clearCache } = useCache();
-  const [isCapturing, setIsCapturing] = useState(false);
-  const maxCacheSize = 10;
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
 
-  const handleSubmitCache = useCallback(async () => {
-    await sendImageToServer(cache, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/process-image", clearCache);
-  }, [cache, clearCache]);
+  const processQueue = useCallback(async () => {
+    if (isProcessingQueue || cache.length === 0) {
+      return;
+    }
+    setIsProcessingQueue(true);
+    const currentImage = cache[0];
 
-  const captureAndProcessImage = useCallback(async () => {
-    if (isCapturing || !userId) return;
+    try {
+      await sendImageToServer(
+        [currentImage],
+        "https://gaze-detection-c70f9bc17dbb.herokuapp.com/process-image",
+        clearCache
+      );
+    } catch (error) {
+      console.error("Error processing image:", error);
+    }
 
-    setIsCapturing(true);
+    setIsProcessingQueue(false);
+  }, [cache, isProcessingQueue, clearCache]);
+
+  useEffect(() => {
+    processQueue();
+  }, [cache, processQueue]);
+
+  const captureAndProcessImage = async () => {
+    if (processing || !userId) return;
+
     setProcessing("processing");
-
     try {
       const blob = await captureImage();
       const { cameraMatrix, distCoeffs } = getCameraParameters(videoRef.current);
-      const cacheItem = {
+      const imageData = {
         userId: userId,
         cursorPosition: JSON.stringify(currentCursorPosition.current),
         cameraMatrix: JSON.stringify(cameraMatrix),
@@ -35,57 +52,28 @@ function CameraComponent({ userId }) {
         blob: blob,
       };
 
-      addToCache(cacheItem);
+      addToCache(imageData);
       setProcessing("success");
     } catch (error) {
       console.log(error);
       setProcessing("error");
     } finally {
-      setIsCapturing(false);
       setTimeout(() => setProcessing(null), 500);
-      console.log(cache.length);
     }
-  }, [userId, isCapturing, captureImage, videoRef, addToCache, cache.length]);
+  };
 
-  const debouncedCaptureAndProcessImage = debounce(captureAndProcessImage, 500);
+  const debouncedCaptureAndProcessImage = debounce(captureAndProcessImage, 250);
 
-  const handleKeyDown = useCallback(
-    (event) => {
+  useEffect(() => {
+    const handleKeyDown = (event) => {
       if (event.keyCode === 32) {
         debouncedCaptureAndProcessImage();
       }
-    },
-    [debouncedCaptureAndProcessImage]
-  );
-
-  useEffect(() => {
-    const handleBeforeUnload = async (e) => {
-      if (cache.length > 0) {
-        e.preventDefault();
-        await handleSubmitCache();
-      }
-    };
-
-    const updateCursorPosition = (event) => {
-      currentCursorPosition.current = { x: event.screenX, y: event.screenY };
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("mousemove", updateCursorPosition);
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      document.removeEventListener("mousemove", updateCursorPosition);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [handleKeyDown, handleSubmitCache, cache.length]);
-
-  useEffect(() => {
-    if (cache.length >= maxCacheSize) {
-      handleSubmitCache();
-    }
-  }, [cache.length, handleSubmitCache]);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [debouncedCaptureAndProcessImage]);
 
   return (
     <div className={`camera-container ${processing}`}>
