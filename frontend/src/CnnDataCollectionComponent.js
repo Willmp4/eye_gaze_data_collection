@@ -5,6 +5,20 @@ import sendImageToServer from "./sendImageToServer";
 import getCameraParameters from "./getCameraParameters";
 import useCache from "./useCache";
 
+function debounce(func, wait) {
+  let timeout;
+
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
 function CameraComponent({ userId }) {
   const { videoRef, captureImage } = useCamera();
   const currentCursorPosition = useRef({ x: 0, y: 0 });
@@ -57,11 +71,14 @@ function CameraComponent({ userId }) {
     window.addEventListener("keydown", handleKeyDown);
     document.addEventListener("mousemove", updateCursorPosition);
     window.addEventListener("beforeunload", handleBeforeUnload);
+    const debouncedHandleKeyDown = debounce(handleKeyDown, 500);
+    window.addEventListener("keydown", debouncedHandleKeyDown);
 
     return () => {
       document.removeEventListener("mousemove", updateCursorPosition);
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("keydown", debouncedHandleKeyDown);
     };
   }, [userId, captureImage, videoRef, addToCache, handleSubmitCache, cache.length]);
 
