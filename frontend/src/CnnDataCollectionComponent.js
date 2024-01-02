@@ -4,20 +4,7 @@ import useCamera from "./useCamera";
 import sendImageToServer from "./sendImageToServer";
 import getCameraParameters from "./getCameraParameters";
 import useCache from "./useCache";
-
-function debounce(func, wait) {
-  let timeout;
-
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
+import { debounce } from "lodash";
 
 function CameraComponent({ userId }) {
   const { videoRef, captureImage } = useCamera();
@@ -30,8 +17,9 @@ function CameraComponent({ userId }) {
     await sendImageToServer(cache, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/process-image", clearCache);
   }, [cache, clearCache]);
 
-  useEffect(() => {
-    const handleKeyDown = async (event) => {
+  // Debounced function using useCallback
+  const debouncedHandleKeyDown = useCallback(
+    async (event) => {
       if (event.keyCode === 32 && userId) {
         setProcessing("processing");
         try {
@@ -55,8 +43,14 @@ function CameraComponent({ userId }) {
           setTimeout(() => setProcessing(null), 500);
         }
       }
-    };
+    },
+    [userId, captureImage, videoRef, addToCache, cache.length] // Dependencies
+  );
 
+  // Use debounced function
+  const handleKeyDown = debounce(debouncedHandleKeyDown, 500);
+
+  useEffect(() => {
     const handleBeforeUnload = async (e) => {
       if (cache.length > 0) {
         e.preventDefault();
@@ -71,16 +65,12 @@ function CameraComponent({ userId }) {
     window.addEventListener("keydown", handleKeyDown);
     document.addEventListener("mousemove", updateCursorPosition);
     window.addEventListener("beforeunload", handleBeforeUnload);
-    const debouncedHandleKeyDown = debounce(handleKeyDown, 500);
-    window.addEventListener("keydown", debouncedHandleKeyDown);
-
     return () => {
       document.removeEventListener("mousemove", updateCursorPosition);
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("keydown", debouncedHandleKeyDown);
     };
-  }, [userId, captureImage, videoRef, addToCache, handleSubmitCache, cache.length]);
+  }, [handleKeyDown, handleSubmitCache, cache.length]);
 
   useEffect(() => {
     if (cache.length >= maxCacheSize) {
