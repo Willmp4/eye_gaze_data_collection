@@ -1,4 +1,4 @@
-const sendImageToServer = async (cache, url, clearCache, afterSubmission) => {
+const sendImageToServer = async (cache, url) => {
   for (const item of cache) {
     const formData = new FormData();
 
@@ -24,11 +24,6 @@ const sendImageToServer = async (cache, url, clearCache, afterSubmission) => {
       console.error("Error sending data:", err);
       // Handle error appropriately
     }
-  }
-
-  clearCache(); // Clear the cache after all submissions
-  if (afterSubmission) {
-    afterSubmission(); // Call the generic completion handler
   }
 };
 

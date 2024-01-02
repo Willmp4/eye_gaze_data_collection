@@ -7,11 +7,15 @@ const useCache = () => {
     setCache((currentCache) => [...currentCache, dataItem]);
   }, []);
 
+  const removeFromCache = useCallback((dataItemToRemove) => {
+    setCache((currentCache) => currentCache.filter((item) => item !== dataItemToRemove));
+  }, []);
+
   const clearCache = useCallback(() => {
     setCache([]);
   }, []);
 
-  return { cache, addToCache, clearCache };
+  return { cache, addToCache, removeFromCache, clearCache };
 };
 
 export default useCache;
