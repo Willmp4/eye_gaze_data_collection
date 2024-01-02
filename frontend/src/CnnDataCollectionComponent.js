@@ -13,6 +13,18 @@ function CameraComponent({ userId }) {
   const { cache, addToCache, clearCache } = useCache();
   const [isProcessingQueue, setIsProcessingQueue] = useState(false);
 
+  const updateCursorPosition = useCallback((event) => {
+    currentCursorPosition.current = { x: event.clientX, y: event.clientY };
+  }, []);
+
+  // Add event listener for mouse movement
+  useEffect(() => {
+    window.addEventListener("mousemove", updateCursorPosition);
+    return () => {
+      window.removeEventListener("mousemove", updateCursorPosition);
+    };
+  }, [updateCursorPosition]);
+
   const processQueue = useCallback(async () => {
     if (isProcessingQueue || cache.length === 0) {
       return;
@@ -44,9 +56,12 @@ function CameraComponent({ userId }) {
     try {
       const blob = await captureImage();
       const { cameraMatrix, distCoeffs } = getCameraParameters(videoRef.current);
+
+      const currentCursorPos = currentCursorPosition.current;
+
       const imageData = {
         userId: userId,
-        cursorPosition: JSON.stringify(currentCursorPosition.current),
+        cursorPosition: JSON.stringify(currentCursorPos),
         cameraMatrix: JSON.stringify(cameraMatrix),
         distCoeffs: JSON.stringify(distCoeffs),
         blob: blob,
