@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../styles/App.css";
-import CameraComponent from "../components/CnnDataCollectoinComponent/CnnDataCollectionComponent"; // Make sure the path is correct
+import CnnDataCollectionComponent from "../components/CnnDataCollectoinComponent/CnnDataCollectionComponent"; // Make sure the path is correct
 import { Button } from "react-bootstrap";
 import CalibrationComponent from "../components/CalibrationComponent/CalibrationComponent";
 import UserGuideModal from "./userGuide";
@@ -42,7 +42,7 @@ function App() {
       ) : (
         <>
           <p>Look at the cursor and then press the space bar to take the pictures.</p>
-          <CameraComponent userId={userId} />
+          <CnnDataCollectionComponent userId={userId} />
         </>
       )}
 

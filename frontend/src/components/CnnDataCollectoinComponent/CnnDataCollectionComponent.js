@@ -5,7 +5,7 @@ import sendImageToServer from "../../utils/sendImageToServer";
 import getCameraParameters from "../../utils/getCameraParameters";
 import useCache from "../../utils/useCache";
 
-function CameraComponent({ userId }) {
+function CnnDataCollectionComponent({ userId }) {
   const { videoRef, captureImage } = useCamera();
   const currentCursorPosition = useRef({ x: 0, y: 0 });
   const [isCapturing, setIsCapturing] = useState(false);
@@ -90,4 +90,4 @@ function CameraComponent({ userId }) {
   );
 }
 
-export default CameraComponent;
+export default CnnDataCollectionComponent;
