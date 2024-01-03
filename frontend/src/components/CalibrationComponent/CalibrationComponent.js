@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from "react";
 import "./CalibrationComponent.css";
-import useCamera from "./useCamera";
-import sendImageToServer from "./sendImageToServer";
-import getCameraParameters from "./getCameraParameters";
-import useCache from "./useCache";
+import useCamera from "../../hooks/useCamera";
+import sendImageToServer from "../../utils/sendImageToServer";
+import getCameraParameters from "../../utils/getCameraParameters";
+import useCache from "../../utils/useCache";
 
 function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   const [calibrationPoints, setCalibrationPoints] = useState([]);

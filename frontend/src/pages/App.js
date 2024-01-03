@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import "./App.css";
-import CameraComponent from "./CnnDataCollectionComponent"; // Make sure the path is correct
+import "../styles/App.css";
+import CameraComponent from "../components/CnnDataCollectoinComponent/CnnDataCollectionComponent"; // Make sure the path is correct
 import { Button } from "react-bootstrap";
-import CalibrationComponent from "./CalibrationComponent";
+import CalibrationComponent from "../components/CalibrationComponent/CalibrationComponent";
 import UserGuideModal from "./userGuide";
 
 function App() {
