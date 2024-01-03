@@ -9,7 +9,6 @@ function useEventListeners(eventName, handler, element = window, dependencies) {
     return () => {
       element.removeEventListener(eventName, handler);
     };
-    // eslint-disable-next-line
   }, [eventName, handler, element]); // Add dependencies here
 }
 

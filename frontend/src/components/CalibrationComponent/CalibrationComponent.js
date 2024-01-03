@@ -1,17 +1,18 @@
 import React, { useEffect, useState, useCallback } from "react";
 import "./CalibrationComponent.css";
 import useCamera from "../../hooks/useCamera";
-import sendImageToServer from "../../utils/sendImageToServer";
+import useCacheManager from "../../hooks/useCacheManager";
 import getCameraParameters from "../../utils/getCameraParameters";
-import useCache from "../../utils/useCache";
+import useEventListeners from "../../hooks/useEventListeners";
+import sendImageToServer from "../../utils/sendImageToServer";
 
 function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   const [calibrationPoints, setCalibrationPoints] = useState([]);
   const [currentPoint, setCurrentPoint] = useState(0);
   const { videoRef, captureImage } = useCamera();
-  const [processing, setProcessing] = useState(null);
-  const { cache, addToCache, clearCache } = useCache();
+  const { cache, addToCache, clearCache } = useCacheManager();
   const [isUploading, setIsUploading] = useState(false);
+  const [processing, setProcessing] = useState(null);
 
   const generateCalibrationPoints = useCallback(() => {
     const screenWidth = window.screen.width;
@@ -39,12 +40,13 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
       }
     }
 
+    console.log(points.length);
+
     return points;
   }, []);
 
   useEffect(() => {
-    const updatedCalibrationPoints = generateCalibrationPoints();
-    setCalibrationPoints(updatedCalibrationPoints);
+    setCalibrationPoints(generateCalibrationPoints());
   }, [generateCalibrationPoints]);
 
   const handleSubmitCache = useCallback(async () => {
@@ -90,19 +92,20 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
     }
   }, [currentPoint, calibrationPoints, userId, captureImage, videoRef, addToCache, handleSubmitCache]);
 
-  useEffect(() => {
-    const keyDownHandler = async (event) => {
+  useEventListeners(
+    "keydown",
+    async (event) => {
       if (event.keyCode === 32 && userId && !isUploading) {
         await handleSpaceBar();
       }
-    };
+    },
+    window,
+    [userId, handleSpaceBar, isUploading]
+  );
 
-    window.addEventListener("keydown", keyDownHandler);
-    return () => {
-      window.removeEventListener("keydown", keyDownHandler);
-    };
-    // Add dependencies to the dependency array
-  }, [userId, handleSpaceBar, isUploading]);
+  const handleUserIdChange = (e) => {
+    setUserId(e.target.value);
+  };
 
   if (isUploading) {
     return <div className="uploading-text">Uploading...</div>;
@@ -115,7 +118,7 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
         type="text"
         placeholder="Enter User ID"
         value={userId}
-        onChange={(e) => setUserId(e.target.value)}
+        onChange={handleUserIdChange}
         className="user-id-input"
         aria-label="User ID"
       />
