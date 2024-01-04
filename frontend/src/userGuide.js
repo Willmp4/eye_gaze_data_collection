@@ -103,10 +103,7 @@ function UserGuideModal() {
           </p>
 
           <h3>Feedback and Support</h3>
-          <p>
-            If you encounter any issues or have feedback, please don't hesitate to reach out to me at [support
-            email/contact form].
-          </p>
+          <p>If you encounter any issues or have feedback, please don't hesitate to reach out to me</p>
 
           <p>
             <em>Thank you for participating in the Gaze Capture study. Your contribution is greatly appreciated!</em>
