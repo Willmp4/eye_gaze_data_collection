@@ -22,18 +22,15 @@ function CnnDataCollectionComponent({ userId }) {
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [taskQueue.length]); // Dependency array includes taskQueue.length
+  }, [taskQueue.length]);
 
   const updateCursorPosition = (event) => {
     currentCursorPosition.current = { x: event.clientX, y: event.clientY };
   };
 
   const enqueueCapture = () => {
-    console.log("enqueueCapture");
     if (!userId || isCapturing) return;
-
     setIsCapturing(true);
-
     captureImage()
       .then((blob) => {
         const { cameraMatrix, distCoeffs } = getCameraParameters(videoRef.current);
