@@ -8,6 +8,7 @@ export const useQueue = () => useContext(QueueContext);
 export const QueueProvider = ({ children }) => {
   const [taskQueue, setTaskQueue] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [startQueue, setStartQueue] = useState(false);
 
   const addToQueue = (item) => {
     setTaskQueue((prev) => [...prev, item]);
@@ -29,13 +30,13 @@ export const QueueProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (taskQueue.length > 0 && !isProcessing) {
+    if (startQueue && taskQueue.length > 0 && !isProcessing) {
       const item = taskQueue[0];
       processQueueItem(item).then(() => {
         setTaskQueue((prev) => prev.slice(1));
       });
     }
-  }, [taskQueue, isProcessing]);
+  }, [taskQueue, isProcessing, startQueue]);
 
-  return <QueueContext.Provider value={{ addToQueue }}>{children}</QueueContext.Provider>;
+  return <QueueContext.Provider value={{ addToQueue, setStartQueue }}>{children}</QueueContext.Provider>;
 };

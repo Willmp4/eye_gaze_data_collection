@@ -10,8 +10,7 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   const [currentPoint, setCurrentPoint] = useState(0);
   const { videoRef, captureImage } = useCamera();
   const [processing, setProcessing] = useState(null);
-  const [calibrationData, setCalibrationData] = useState([]);
-  const { addToQueue } = useQueue();
+  const { addToQueue, setStartQueue } = useQueue();
 
   const generateCalibrationPoints = useCallback(() => {
     const screenWidth = window.screen.width;
@@ -46,7 +45,7 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   }, [generateCalibrationPoints]);
 
   const handleSpaceBar = useCallback(async () => {
-    if (currentPoint < calibrationPoints.length - 1) {
+    if (currentPoint < calibrationPoints.length) {
       const point = calibrationPoints[currentPoint];
       try {
         const blob = await captureImage();
@@ -64,7 +63,19 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
           distCoeffs: JSON.stringify(distCoeffs),
           blob: blob,
         };
-        setCalibrationData((prevData) => [...prevData, cacheItem]);
+
+        // Add every captured point to the queue
+        const taskItem = {
+          type: "calibration",
+          data: cacheItem,
+        };
+        addToQueue(taskItem);
+
+        // Logic to start processing the queue when halfway through
+        if (currentPoint === Math.floor(calibrationPoints.length / 2)) {
+          setStartQueue(true);
+        }
+
         setProcessing("success");
         setTimeout(() => setProcessing(null), 500);
         setCurrentPoint(currentPoint + 1);
@@ -74,17 +85,9 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
         console.error("Error capturing or sending image:", error);
       }
     }
-
-    // Check if calibration is complete and enqueue data
+    // Check if calibration is complete
     if (currentPoint >= calibrationPoints.length - 1) {
       onCalibrationComplete();
-      calibrationData.forEach((item) => {
-        const taskItem = {
-          type: "calibration",
-          data: item,
-        };
-        addToQueue(taskItem);
-      });
     }
   }, [
     currentPoint,
@@ -92,8 +95,8 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
     userId,
     captureImage,
     videoRef,
-    calibrationData,
     addToQueue,
+    setStartQueue,
     onCalibrationComplete,
   ]);
 
