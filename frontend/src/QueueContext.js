@@ -38,5 +38,5 @@ export const QueueProvider = ({ children }) => {
     }
   }, [taskQueue, isProcessing, startQueue]);
 
-  return <QueueContext.Provider value={{ addToQueue, setStartQueue }}>{children}</QueueContext.Provider>;
+  return <QueueContext.Provider value={{ addToQueue, setStartQueue, taskQueue }}>{children}</QueueContext.Provider>;
 };
