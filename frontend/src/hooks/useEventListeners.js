@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-function useEventListeners(eventName, handler, element = window, dependencies) {
+function useEventListeners(eventName, handler, element = window) {
   useEffect(() => {
     const isSupported = element && element.addEventListener;
     if (!isSupported) return;
