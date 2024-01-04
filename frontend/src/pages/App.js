@@ -8,7 +8,7 @@ import { QueueProvider } from "../QueueContext";
 function App() {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isCalibrationComplete, setIsCalibrationComplete] = useState(false);
-  const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState("");
 
   const handleCalibrationComplete = () => {
     setIsCalibrationComplete(true);
