@@ -1,17 +1,17 @@
 import React, { useEffect, useState, useCallback } from "react";
 import "./CalibrationComponent.css";
 import useCamera from "../../hooks/useCamera";
-import useCacheManager from "../../hooks/useCacheManager";
 import getCameraParameters from "../../utils/getCameraParameters";
 import useEventListeners from "../../hooks/useEventListeners";
+import { useQueue } from "../../QueueContext";
 
 function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   const [calibrationPoints, setCalibrationPoints] = useState([]);
   const [currentPoint, setCurrentPoint] = useState(0);
   const { videoRef, captureImage } = useCamera();
-  const { addToCache, processCache, clearCache } = useCacheManager();
-  const [isUploading, setIsUploading] = useState(false);
   const [processing, setProcessing] = useState(null);
+  const [calibrationData, setCalibrationData] = useState([]);
+  const { addToQueue } = useQueue();
 
   const generateCalibrationPoints = useCallback(() => {
     const screenWidth = window.screen.width;
@@ -38,9 +38,6 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
         points.push({ x, y });
       }
     }
-
-    console.log(points.length);
-
     return points;
   }, []);
 
@@ -48,16 +45,8 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
     setCalibrationPoints(generateCalibrationPoints());
   }, [generateCalibrationPoints]);
 
-  const handleSubmitCache = useCallback(async () => {
-    setIsUploading(true);
-    await processCache("https://gaze-detection-c70f9bc17dbb.herokuapp.com/calibrate");
-    clearCache();
-    setIsUploading(false);
-    onCalibrationComplete(false);
-  }, [processCache, clearCache, onCalibrationComplete]);
-
   const handleSpaceBar = useCallback(async () => {
-    if (currentPoint < calibrationPoints.length) {
+    if (currentPoint < calibrationPoints.length - 1) {
       const point = calibrationPoints[currentPoint];
       try {
         const blob = await captureImage();
@@ -75,41 +64,53 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
           distCoeffs: JSON.stringify(distCoeffs),
           blob: blob,
         };
-
-        addToCache(cacheItem);
+        setCalibrationData((prevData) => [...prevData, cacheItem]);
         setProcessing("success");
         setTimeout(() => setProcessing(null), 500);
-        if (currentPoint < calibrationPoints.length - 1) {
-          setCurrentPoint(currentPoint + 1);
-        } else {
-          handleSubmitCache();
-        }
+        setCurrentPoint(currentPoint + 1);
       } catch (error) {
         setProcessing("error");
         setTimeout(() => setProcessing(null), 500);
         console.error("Error capturing or sending image:", error);
       }
     }
-  }, [currentPoint, calibrationPoints, userId, captureImage, videoRef, addToCache, handleSubmitCache]);
+
+    // Check if calibration is complete and enqueue data
+    if (currentPoint >= calibrationPoints.length - 1) {
+      onCalibrationComplete();
+      calibrationData.forEach((item) => {
+        const taskItem = {
+          type: "calibration",
+          data: item,
+        };
+        addToQueue(taskItem);
+      });
+    }
+  }, [
+    currentPoint,
+    calibrationPoints,
+    userId,
+    captureImage,
+    videoRef,
+    calibrationData,
+    addToQueue,
+    onCalibrationComplete,
+  ]);
 
   useEventListeners(
     "keydown",
     async (event) => {
-      if (event.keyCode === 32 && userId && !isUploading) {
+      if (event.keyCode === 32 && userId) {
         await handleSpaceBar();
       }
     },
     window,
-    [userId, handleSpaceBar, isUploading]
+    [userId, handleSpaceBar]
   );
 
   const handleUserIdChange = (e) => {
     setUserId(e.target.value);
   };
-
-  if (isUploading) {
-    return <div className="uploading-text">Uploading...</div>;
-  }
 
   return (
     <div className={`calibration-container ${processing}`}>
