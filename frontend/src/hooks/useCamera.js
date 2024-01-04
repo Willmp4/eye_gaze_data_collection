@@ -4,12 +4,28 @@ const useCamera = () => {
   const videoRef = useRef(null);
 
   useEffect(() => {
+    let currentVideoRef = videoRef.current; // Capture the current value of videoRef
+
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        if (currentVideoRef && currentVideoRef.srcObject) {
+          const tracks = currentVideoRef.srcObject.getTracks();
+          tracks.forEach((track) => track.stop());
+        }
+        if (currentVideoRef) {
+          currentVideoRef.srcObject = stream;
+          currentVideoRef.play().catch((e) => console.log("Error playing video: ", e));
+        }
       });
     }
+
+    // Cleanup function
+    return () => {
+      if (currentVideoRef && currentVideoRef.srcObject) {
+        const tracks = currentVideoRef.srcObject.getTracks();
+        tracks.forEach((track) => track.stop());
+      }
+    };
   }, []);
 
   const captureImage = (onCapture = (blob) => {}) => {
