@@ -4,13 +4,12 @@ import useCamera from "../../hooks/useCamera";
 import useCacheManager from "../../hooks/useCacheManager";
 import getCameraParameters from "../../utils/getCameraParameters";
 import useEventListeners from "../../hooks/useEventListeners";
-import sendImageToServer from "../../utils/sendImageToServer";
 
 function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   const [calibrationPoints, setCalibrationPoints] = useState([]);
   const [currentPoint, setCurrentPoint] = useState(0);
   const { videoRef, captureImage } = useCamera();
-  const { cache, addToCache, clearCache } = useCacheManager();
+  const { addToCache, processCache, clearCache } = useCacheManager();
   const [isUploading, setIsUploading] = useState(false);
   const [processing, setProcessing] = useState(null);
 
@@ -51,10 +50,11 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
 
   const handleSubmitCache = useCallback(async () => {
     setIsUploading(true);
-    await sendImageToServer(cache, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/calibrate", clearCache);
+    await processCache("https://gaze-detection-c70f9bc17dbb.herokuapp.com/calibrate");
+    clearCache();
     setIsUploading(false);
     onCalibrationComplete(false);
-  }, [cache, clearCache, onCalibrationComplete]);
+  }, [processCache, clearCache, onCalibrationComplete]);
 
   const handleSpaceBar = useCallback(async () => {
     if (currentPoint < calibrationPoints.length) {
