@@ -1,17 +1,16 @@
 import React, { useEffect, useState, useCallback } from "react";
 import "./CalibrationComponent.css";
-import useCamera from "./useCamera";
-import sendImageToServer from "./sendImageToServer";
-import getCameraParameters from "./getCameraParameters";
-import useCache from "./useCache";
+import useCamera from "../../hooks/useCamera";
+import getCameraParameters from "../../utils/getCameraParameters";
+import useEventListeners from "../../hooks/useEventListeners";
+import { useQueue } from "../../QueueContext";
 
 function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   const [calibrationPoints, setCalibrationPoints] = useState([]);
   const [currentPoint, setCurrentPoint] = useState(0);
   const { videoRef, captureImage } = useCamera();
   const [processing, setProcessing] = useState(null);
-  const { cache, addToCache, clearCache } = useCache();
-  const [isUploading, setIsUploading] = useState(false);
+  const { addToQueue, setStartQueue } = useQueue();
 
   const generateCalibrationPoints = useCallback(() => {
     const screenWidth = window.screen.width;
@@ -38,21 +37,12 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
         points.push({ x, y });
       }
     }
-
     return points;
   }, []);
 
   useEffect(() => {
-    const updatedCalibrationPoints = generateCalibrationPoints();
-    setCalibrationPoints(updatedCalibrationPoints);
+    setCalibrationPoints(generateCalibrationPoints());
   }, [generateCalibrationPoints]);
-
-  const handleSubmitCache = useCallback(async () => {
-    setIsUploading(true);
-    await sendImageToServer(cache, "https://gaze-detection-c70f9bc17dbb.herokuapp.com/calibrate", clearCache);
-    setIsUploading(false);
-    onCalibrationComplete(false);
-  }, [cache, clearCache, onCalibrationComplete]);
 
   const handleSpaceBar = useCallback(async () => {
     if (currentPoint < calibrationPoints.length) {
@@ -74,39 +64,56 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
           blob: blob,
         };
 
-        addToCache(cacheItem);
+        // Add every captured point to the queue
+        const taskItem = {
+          type: "calibration",
+          data: cacheItem,
+        };
+        addToQueue(taskItem);
+
+        // Logic to start processing the queue when halfway through
+        if (currentPoint === Math.floor(calibrationPoints.length / 2)) {
+          setStartQueue(true);
+        }
+
         setProcessing("success");
         setTimeout(() => setProcessing(null), 500);
-        if (currentPoint < calibrationPoints.length - 1) {
-          setCurrentPoint(currentPoint + 1);
-        } else {
-          handleSubmitCache();
-        }
+        setCurrentPoint(currentPoint + 1);
       } catch (error) {
         setProcessing("error");
         setTimeout(() => setProcessing(null), 500);
         console.error("Error capturing or sending image:", error);
       }
     }
-  }, [currentPoint, calibrationPoints, userId, captureImage, videoRef, addToCache, handleSubmitCache]);
+    // Check if calibration is complete
+    if (currentPoint >= calibrationPoints.length - 1) {
+      onCalibrationComplete();
+    }
+  }, [
+    currentPoint,
+    calibrationPoints,
+    userId,
+    captureImage,
+    videoRef,
+    addToQueue,
+    setStartQueue,
+    onCalibrationComplete,
+  ]);
 
-  useEffect(() => {
-    const keyDownHandler = async (event) => {
-      if (event.keyCode === 32 && userId && !isUploading) {
+  useEventListeners(
+    "keydown",
+    async (event) => {
+      if (event.keyCode === 32 && userId) {
         await handleSpaceBar();
       }
-    };
+    },
+    window,
+    [userId, handleSpaceBar]
+  );
 
-    window.addEventListener("keydown", keyDownHandler);
-    return () => {
-      window.removeEventListener("keydown", keyDownHandler);
-    };
-    // Add dependencies to the dependency array
-  }, [userId, handleSpaceBar, isUploading]);
-
-  if (isUploading) {
-    return <div className="uploading-text">Uploading...</div>;
-  }
+  const handleUserIdChange = (e) => {
+    setUserId(e.target.value);
+  };
 
   return (
     <div className={`calibration-container ${processing}`}>
@@ -115,7 +122,7 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
         type="text"
         placeholder="Enter User ID"
         value={userId}
-        onChange={(e) => setUserId(e.target.value)}
+        onChange={handleUserIdChange}
         className="user-id-input"
         aria-label="User ID"
       />
