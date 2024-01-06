@@ -10,6 +10,9 @@ function CnnDataCollectionComponent({ userId }) {
   const currentCursorPosition = useRef({ x: 0, y: 0 });
   const [isCapturing, setIsCapturing] = useState(false);
   const { addToQueue, taskQueue } = useQueue();
+  //when space bar is pressed added image and increment counter
+
+  const [counter, setCounter] = useState(0);
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -58,6 +61,7 @@ function CnnDataCollectionComponent({ userId }) {
   useEventListeners("mousemove", updateCursorPosition);
   useEventListeners("keydown", (event) => {
     if (event.keyCode === 32) {
+      setCounter(counter + 1);
       enqueueCapture();
     }
   });
@@ -65,6 +69,7 @@ function CnnDataCollectionComponent({ userId }) {
   return (
     <div className={`camera-container ${isCapturing ? "processing" : ""}`}>
       <video ref={videoRef} className="video-feed" />
+      <div className="counter">{counter}</div>
       {isCapturing && <div className="processing-indicator">Processing...</div>}
     </div>
   );
