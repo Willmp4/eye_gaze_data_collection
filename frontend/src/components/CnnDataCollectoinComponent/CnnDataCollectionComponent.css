@@ -6,7 +6,18 @@
     padding: 20px; /* Add some padding around the video */
   }
 
-  
+  .capture-notification {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  }
+    
   .camera-container {
     text-align: center;
     background: white; /* Background for content */

@@ -10,8 +10,7 @@ function CnnDataCollectionComponent({ userId }) {
   const currentCursorPosition = useRef({ x: 0, y: 0 });
   const [isCapturing, setIsCapturing] = useState(false);
   const { addToQueue, taskQueue } = useQueue();
-  //when space bar is pressed added image and increment counter
-
+  const [showNotification, setShowNotification] = useState(false);
   const [counter, setCounter] = useState(0);
 
   useEffect(() => {
@@ -51,6 +50,8 @@ function CnnDataCollectionComponent({ userId }) {
         };
         addToQueue(taskItem);
         setIsCapturing(false);
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 2000);
       })
       .catch((error) => {
         console.error("Error capturing image:", error);
@@ -71,6 +72,7 @@ function CnnDataCollectionComponent({ userId }) {
       <video ref={videoRef} className="video-feed" />
       <div className="counter">{counter}</div>
       {isCapturing && <div className="processing-indicator">Processing...</div>}
+      {showNotification && <div className="captrue-notification">Image captured!</div>}
     </div>
   );
 }
