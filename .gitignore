@@ -8,3 +8,4 @@ backend/web_app
 *.pyc
 backend/ProgramAccess_accessKeys.csv
 backend/data/*
+data/*
