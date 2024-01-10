@@ -17,7 +17,12 @@ def capture_and_save(user_id, original_frame, additional_data, data_type='eye_ga
     upload_image_to_s3(s3_client, bucket_name, f'{img_dir}{img_name}', original_frame)
     append_data_to_csv(s3_client, bucket_name, csv_name, data_row)
     if data_type == 'calibration':
-        update_metadata_if_changed(s3_client, bucket_name, metadata_file, additional_data[1:])
+        # Assuming additional_data[1] is screen_data and additional_data[2:] is camera_info
+        metadata = {
+            "screenData": additional_data[1] if len(additional_data) > 1 else None,
+            "cameraInfo": additional_data[2:] if len(additional_data) > 2 else None
+        }
+        update_metadata_if_changed(s3_client, bucket_name, metadata_file, metadata)
 
 def prepare_data_and_image(user_id, original_frame, additional_data, img_dir, data_type):
     unique_id = uuid.uuid4()
@@ -35,7 +40,6 @@ def format_data_row(additional_data, img_path, data_type):
     else:
         # Handle other data types if needed
         return [img_path]
-
 
 def upload_image_to_s3(s3_client, bucket_name, img_path, original_frame):
     try:
@@ -61,14 +65,24 @@ def append_data_to_csv(s3_client, bucket_name, csv_name, data_row):
 def update_metadata_if_changed(s3_client, bucket_name, metadata_file, camera_info):
     if camera_info:
         try:
-            # Convert the NumPy array to a list or dictionary
-            camera_info_serializable = camera_info.tolist() if isinstance(camera_info, np.ndarray) else camera_info
-            
+            # Ensure all NumPy arrays are converted to lists
+            camera_info_serializable = convert_numpy_arrays_to_lists(camera_info)
+
             s3_client.put_object(Body=json.dumps(camera_info_serializable), Bucket=bucket_name, Key=metadata_file)
             logging.info("Successfully updated metadata in S3.")
         except Exception as e:
             logging.error(f"Error updating metadata in S3: {e}")
 
+def convert_numpy_arrays_to_lists(data):
+    if isinstance(data, np.ndarray):
+        return data.tolist()
+    elif isinstance(data, dict):
+        return {key: convert_numpy_arrays_to_lists(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [convert_numpy_arrays_to_lists(item) for item in data]
+    elif isinstance(data, tuple):
+        return tuple(convert_numpy_arrays_to_lists(item) for item in data)
+    return data
 
 def get_existing_csv_data(s3_client, bucket_name, csv_name):
     try:
