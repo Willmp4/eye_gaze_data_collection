@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from "react";
 import "./CnnDataCollectionComponent.css";
 import useCamera from "../../hooks/useCamera";
 import useEventListeners from "../../hooks/useEventListeners";
-import getCameraParameters from "../../utils/getCameraParameters";
 import { useQueue } from "../../QueueContext";
 
 function CnnDataCollectionComponent({ userId }) {
