@@ -7,6 +7,8 @@ import numpy as np
 import uuid
 from io import BytesIO, StringIO
 
+logging.basicConfig(level=logging.DEBUG)
+
 def capture_and_save(user_id, original_frame, additional_data, data_type='eye_gaze', s3_client=boto3.client('s3'), bucket_name='eye-gaze-data'):
     user_data_dir = f'data/{user_id}/'
     metadata_file = f'{user_data_dir}metadata.json'
