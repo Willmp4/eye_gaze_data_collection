@@ -1,14 +1,7 @@
 import dlib
 import cv2
 import numpy as np
-# import pyautogui
-import keyboard
-import boto3
-import time
-import csv
-import json
 import logging
-import uuid
 from io import BytesIO, StringIO
 
 logging.basicConfig(level=logging.DEBUG)
