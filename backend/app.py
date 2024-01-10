@@ -51,7 +51,6 @@ def process_image():
     user_id = request.form.get('userId')
     file = request.files['image']
     cursor_position = json.loads(request.form.get('cursorPosition')) if request.form.get('cursorPosition') else None
-    screen_data = json.loads(request.form.get('screenData')) if request.form.get('screenData') else None
 
     if file.filename == '':
         return jsonify({'message': "No image found!", 'data': {}}), 400

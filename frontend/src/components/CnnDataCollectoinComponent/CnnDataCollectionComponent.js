@@ -35,13 +35,9 @@ function CnnDataCollectionComponent({ userId }) {
     setIsCapturing(true);
     captureImage()
       .then((blob) => {
-        const { cameraMatrix, distCoeffs } = getCameraParameters(videoRef.current);
-
         const cacheItem = {
           userId: userId,
           cursorPosition: currentCursorPosition.current,
-          cameraMatrix: JSON.stringify(cameraMatrix),
-          distCoeffs: JSON.stringify(distCoeffs),
           blob: blob,
         };
         const taskItem = {
