@@ -62,7 +62,7 @@ def process_image():
 
     # Capture and save data to S3
     additional_data = [cursor_position]
-    capture_and_save(user_id, image, additional_data, 'eye-gaze')
+    capture_and_save(user_id, image, additional_data, 'eye_gaze')
 
     return jsonify({'message': "Image saved successfully!"})
 
