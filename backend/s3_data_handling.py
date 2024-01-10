@@ -35,7 +35,7 @@ def prepare_data_and_image(user_id, original_frame, additional_data, img_dir, da
 def format_data_row(additional_data, img_path, data_type):
     if data_type == 'eye_gaze':
         cursor_pos = additional_data[0] if len(additional_data) > 0 else ('', '')
-        return [img_path, cursor_pos[0], cursor_pos[1]]
+        return [img_path, cursor_pos['x'], cursor_pos['y']]
     elif data_type == 'calibration':
         calibration_point = additional_data[0] if len(additional_data) > 0 else ('', '')
         return [img_path, calibration_point[0], calibration_point[1]]
