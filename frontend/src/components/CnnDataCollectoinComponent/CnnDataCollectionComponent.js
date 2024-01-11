@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from "react";
 import "./CnnDataCollectionComponent.css";
 import useCamera from "../../hooks/useCamera";
 import useEventListeners from "../../hooks/useEventListeners";
-import getCameraParameters from "../../utils/getCameraParameters";
 import { useQueue } from "../../QueueContext";
 
 function CnnDataCollectionComponent({ userId }) {
@@ -35,13 +34,9 @@ function CnnDataCollectionComponent({ userId }) {
     setIsCapturing(true);
     captureImage()
       .then((blob) => {
-        const { cameraMatrix, distCoeffs } = getCameraParameters(videoRef.current);
-
         const cacheItem = {
           userId: userId,
           cursorPosition: currentCursorPosition.current,
-          cameraMatrix: JSON.stringify(cameraMatrix),
-          distCoeffs: JSON.stringify(distCoeffs),
           blob: blob,
         };
         const taskItem = {

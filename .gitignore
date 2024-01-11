@@ -7,4 +7,7 @@ backend/web_app
 /web_app
 *.pyc
 backend/ProgramAccess_accessKeys.csv
-/data/*
+data_processing/data/*
+data/*
+/data_processing/data_processing
+__init__.py
