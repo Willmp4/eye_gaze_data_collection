@@ -4,8 +4,6 @@ import numpy as np
 import logging
 from io import BytesIO, StringIO
 
-logging.basicConfig(level=logging.DEBUG)
-
 
 def extract_eye_region(image, landmarks, eye_points):
     # Extract the coordinates of the eye points
