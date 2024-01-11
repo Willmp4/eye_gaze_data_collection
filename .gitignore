@@ -9,3 +9,4 @@ backend/web_app
 backend/ProgramAccess_accessKeys.csv
 backend/data/*
 data/*
+/data_processing/data_processing
