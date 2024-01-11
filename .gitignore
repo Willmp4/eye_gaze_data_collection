@@ -10,3 +10,4 @@ backend/ProgramAccess_accessKeys.csv
 backend/data/*
 data/*
 /data_processing/data_processing
+__init__.py
