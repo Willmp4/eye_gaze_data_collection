@@ -9,7 +9,7 @@ class TestS3BucketIntegration(unittest.TestCase):
 
         # Prepare the test data with JSON strings
         data = {
-            'userId': 'test_user',
+            'userId': 'cheif',
             'calibrationPoints': '[80, 9]',  # Convert list to JSON string
             'screenData': '[1080, 1780]', # Convert list to JSON string
             'cameraMatrix': '[[560,0,320],[0,560,240],[0,0,1]]',

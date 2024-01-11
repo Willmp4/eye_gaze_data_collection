@@ -112,7 +112,10 @@ function CalibrationComponent({ onCalibrationComplete, userId, setUserId }) {
   );
 
   const handleUserIdChange = (e) => {
-    setUserId(e.target.value);
+    const inputValue = e.target.value;
+    // Remove spaces from the input value before setting the user ID
+    const sanitizedInput = inputValue.replace(/\s/g, "");
+    setUserId(sanitizedInput);
   };
 
   return (
