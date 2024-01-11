@@ -19,8 +19,8 @@ export const QueueProvider = ({ children }) => {
       setIsProcessing(true);
       const endpoint =
         item.type === "calibration"
-          ? "https://gaze-detection-c70f9bc17dbb.herokuapp.com/calibrate"
-          : "https://gaze-detection-c70f9bc17dbb.herokuapp.com/process-image";
+          ? "https://eye-gaze-data-collection-a78e84ce60e5.herokuapp.com/calibrate"
+          : "https://eye-gaze-data-collection-a78e84ce60e5.herokuapp.com/process-image";
 
       await sendImageToServer([item.data], endpoint);
       setIsProcessing(false);
