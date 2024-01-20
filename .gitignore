@@ -14,3 +14,4 @@ __init__.py
 
 /data_processing/data
 /data_processing/data_processing
+/data_processing/models/*
