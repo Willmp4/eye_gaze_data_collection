@@ -1,9 +1,6 @@
-import dlib
+
 import cv2
 import numpy as np
-import logging
-from io import BytesIO, StringIO
-
 
 def extract_eye_region(image, landmarks, eye_points, buffer= 1):
     # Extract the coordinates of the eye points
@@ -78,10 +75,8 @@ def apply_bilateral_filter(image, d=9, sigmaColor=75, sigmaSpace=75):
 def convert_eye_to_binary(eye_image, blur_ksize=7, threshold_block_size=11, threshold_C=2):
     # Check if eye_image is grayscale (single channel)
     if len(eye_image.shape) == 2 or eye_image.shape[2] == 1:
-        print("grayscale")
         pass
     else:
-        print("not grayscale")
         eye_image = equalize_histogram_color(eye_image)
     
     # Convert to grayscale if the image is not already
