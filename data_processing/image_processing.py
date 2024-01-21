@@ -5,7 +5,7 @@ import logging
 from io import BytesIO, StringIO
 
 
-def extract_eye_region(image, landmarks, eye_points):
+def extract_eye_region(image, landmarks, eye_points, buffer= 1):
     # Extract the coordinates of the eye points
     region = np.array([(landmarks.part(point).x, landmarks.part(point).y) for point in eye_points])
     # Create a mask with zeros
@@ -18,18 +18,20 @@ def extract_eye_region(image, landmarks, eye_points):
     # Cropping the eye region
     (min_x, min_y) = np.min(region, axis=0)
     (max_x, max_y) = np.max(region, axis=0)
+    min_x = max(min_x - buffer, 0)
+    min_y = max(min_y - buffer, 0)
+    max_x = min(max_x + buffer, width)
+    max_y = min(max_y + buffer, height)
     cropped_eye = eye[min_y:max_y, min_x:max_x]
     return cropped_eye, (min_x, min_y, max_x, max_y)
 
 def detect_pupil(eye_image):
-    print("Detecting pupil")
-    # Apply Gaussian Blur
-    blurred_eye = cv2.GaussianBlur(eye_image, (7, 7), 0)
-    # Adaptive thresholding to binarize the image
-    thresholded_eye = cv2.adaptiveThreshold(blurred_eye, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
     # Morphological operations
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    morphed_eye = cv2.morphologyEx(thresholded_eye, cv2.MORPH_CLOSE, kernel, iterations=2)
+    morphed_eye = cv2.morphologyEx(eye_image, cv2.MORPH_CLOSE, kernel, iterations=2)
+    # Find contours which will give us the pupil
+    contours, _ = cv2.findContours(morphed_eye, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Sorting contours is done here if needed
     # Find contours which will give us the pupil
     contours, _ = cv2.findContours(morphed_eye, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # Assume the largest contour is the pupil
@@ -43,41 +45,62 @@ def detect_pupil(eye_image):
     #         cy = int(M['m01']/M['m00'])
     #         return (cx, cy), contours[0]
     contours, _ = cv2.findContours(morphed_eye, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    print("Contours: ", contours)
     for contour in contours:
-        print("Contour area: ", cv2.contourArea(contour))
-        # Approximate the contour to reduce the number of points
-        approx = cv2.approxPolyDP(contour, 0.04 * cv2.arcLength(contour, True), True)
-        area = cv2.contourArea(approx)
-        print("Approx area: ", area)
-        # Assume the pupil will be the largest, roughly circular contour
-        if len(approx) > 1 and area > 5:  # Adjust threshold as needed
-            (x, y), radius = cv2.minEnclosingCircle(approx)
+        # Calculate the circularity of the contour5180
+        perimeter = cv2.arcLength(contour, True)
+        area = cv2.contourArea(contour)
+        if area == 0:
+            continue
+        circularity = 4 * np.pi * (area / (perimeter * perimeter))
+        # Filter based on circularity and area
+        if 0.2 < circularity < 1 and area > 10:  # Adjust thresholds as needed
+            (x, y), radius = cv2.minEnclosingCircle(contour)
             center = (int(x), int(y))
             radius = int(radius)
-            print("Pupil radius: ", radius)
-            print("Pupil center: ", center)
-            if radius > 10:  # Avoid tiny contours
-                print("Pupil found") 
+            if radius > 10:  # Avoid tiny contour
                 return center, contour
-            
     return None, None
 
-def convert_eye_to_binary(eye_image):
+# Apply histogram equalization to an eye region
+def equalize_histogram_color(image):
+    # Convert to YUV color space
+    img_yuv = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
+    # Equalize the histogram of the Y channel
+    img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
+    # Convert back to BGR color space
+    img_output = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+    return img_output
+
+# Apply bilateral filter to an eye region
+def apply_bilateral_filter(image, d=9, sigmaColor=75, sigmaSpace=75):
+    return cv2.bilateralFilter(image, d, sigmaColor, sigmaSpace)
+
+def convert_eye_to_binary(eye_image, blur_ksize=7, threshold_block_size=11, threshold_C=2):
+    # Check if eye_image is grayscale (single channel)
+    if len(eye_image.shape) == 2 or eye_image.shape[2] == 1:
+        print("grayscale")
+        pass
+    else:
+        print("not grayscale")
+        eye_image = equalize_histogram_color(eye_image)
+    
     # Convert to grayscale if the image is not already
     if len(eye_image.shape) == 3:
         gray_eye = cv2.cvtColor(eye_image, cv2.COLOR_BGR2GRAY)
     else:
         gray_eye = eye_image
     
-    # Apply Gaussian Blur
-    blurred_eye = cv2.GaussianBlur(gray_eye, (7, 7), 0)
+    # Apply bilateral filter instead of Gaussian blur
+    blurred_eye = apply_bilateral_filter(gray_eye, d=9, sigmaColor=75, sigmaSpace=75)
     
     # Apply a binary adaptive threshold to the image
     binary_eye = cv2.adaptiveThreshold(
-        blurred_eye, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+        blurred_eye, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 
+        threshold_block_size, threshold_C)
     
     return binary_eye
+
+
 
 def get_head_pose(shape, camera_matrix, dist_coeffs):
     # Define the model points (the points in a generic 3D model face)
