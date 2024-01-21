@@ -21,8 +21,8 @@ def extract_eye_region(image, landmarks, eye_points):
     cropped_eye = eye[min_y:max_y, min_x:max_x]
     return cropped_eye, (min_x, min_y, max_x, max_y)
 
-
 def detect_pupil(eye_image):
+    print("Detecting pupil")
     # Apply Gaussian Blur
     blurred_eye = cv2.GaussianBlur(eye_image, (7, 7), 0)
     # Adaptive thresholding to binarize the image
@@ -34,27 +34,34 @@ def detect_pupil(eye_image):
     contours, _ = cv2.findContours(morphed_eye, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # Assume the largest contour is the pupil
     contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
-    if contours:
-        # Calculate the centroid of the pupil
-        M = cv2.moments(contours[0])
-        if M['m00'] != 0:
-            cx = int(M['m10']/M['m00'])
-            cy = int(M['m01']/M['m00'])
-            return (cx, cy), contours[0]
+
+    # if contours:
+    #     # Calculate the centroid of the pupil
+    #     M = cv2.moments(contours[0])
+    #     if M['m00'] != 0:
+    #         cx = int(M['m10']/M['m00'])
+    #         cy = int(M['m01']/M['m00'])
+    #         return (cx, cy), contours[0]
     contours, _ = cv2.findContours(morphed_eye, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    print("Contours: ", contours)
     for contour in contours:
+        print("Contour area: ", cv2.contourArea(contour))
         # Approximate the contour to reduce the number of points
         approx = cv2.approxPolyDP(contour, 0.04 * cv2.arcLength(contour, True), True)
         area = cv2.contourArea(approx)
+        print("Approx area: ", area)
         # Assume the pupil will be the largest, roughly circular contour
-        if len(approx) > 5 and area > 100:  # Adjust threshold as needed
+        if len(approx) > 1 and area > 5:  # Adjust threshold as needed
             (x, y), radius = cv2.minEnclosingCircle(approx)
             center = (int(x), int(y))
             radius = int(radius)
-            if radius > 1:  # Avoid tiny contours
+            print("Pupil radius: ", radius)
+            print("Pupil center: ", center)
+            if radius > 10:  # Avoid tiny contours
+                print("Pupil found") 
                 return center, contour
+            
     return None, None
-
 
 def convert_eye_to_binary(eye_image):
     # Convert to grayscale if the image is not already
