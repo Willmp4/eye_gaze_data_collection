@@ -51,16 +51,12 @@ def detect_pupil(eye_image):
             continue
         circularity = 4 * np.pi * (area / (perimeter * perimeter))
         # Filter based on circularity and area
-        if 0.2 < circularity < 1 and area > 10:  # Adjust thresholds as needed
+        if 0.1 < circularity < 1 and area > 10:  # Adjust thresholds as needed
             (x, y), radius = cv2.minEnclosingCircle(contour)
             center = (int(x), int(y))
             radius = int(radius)
-            if radius > 4:  # Avoid tiny contour
+            if radius >=3:  # Avoid tiny contour
                 return center, contour
-            else:
-                print("radius too small")
-        else:
-            print("circularity or area too small")
     return None, None
 
 # Apply histogram equalization to an eye region
