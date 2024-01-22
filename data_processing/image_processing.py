@@ -47,6 +47,7 @@ def detect_pupil(eye_image):
         perimeter = cv2.arcLength(contour, True)
         area = cv2.contourArea(contour)
         if area == 0:
+            print("area is 0")
             continue
         circularity = 4 * np.pi * (area / (perimeter * perimeter))
         # Filter based on circularity and area
@@ -54,8 +55,12 @@ def detect_pupil(eye_image):
             (x, y), radius = cv2.minEnclosingCircle(contour)
             center = (int(x), int(y))
             radius = int(radius)
-            if radius > 10:  # Avoid tiny contour
+            if radius > 4:  # Avoid tiny contour
                 return center, contour
+            else:
+                print("radius too small")
+        else:
+            print("circularity or area too small")
     return None, None
 
 # Apply histogram equalization to an eye region
@@ -94,8 +99,6 @@ def convert_eye_to_binary(eye_image, blur_ksize=7, threshold_block_size=11, thre
         threshold_block_size, threshold_C)
     
     return binary_eye
-
-
 
 def get_head_pose(shape, camera_matrix, dist_coeffs):
     # Define the model points (the points in a generic 3D model face)
