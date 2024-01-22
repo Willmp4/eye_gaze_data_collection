@@ -34,13 +34,13 @@ def detect_pupil(eye_image):
     # Assume the largest contour is the pupil
     contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
 
-    # if contours:
-    #     # Calculate the centroid of the pupil
-    #     M = cv2.moments(contours[0])
-    #     if M['m00'] != 0:
-    #         cx = int(M['m10']/M['m00'])
-    #         cy = int(M['m01']/M['m00'])
-    #         return (cx, cy), contours[0]
+    if contours:
+        # Calculate the centroid of the pupil
+        M = cv2.moments(contours[0])
+        if M['m00'] != 0:
+            cx = int(M['m10']/M['m00'])
+            cy = int(M['m01']/M['m00'])
+            return (cx, cy), contours[0]
     contours, _ = cv2.findContours(morphed_eye, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
         # Calculate the circularity of the contour5180
@@ -55,7 +55,7 @@ def detect_pupil(eye_image):
             (x, y), radius = cv2.minEnclosingCircle(contour)
             center = (int(x), int(y))
             radius = int(radius)
-            if radius >=3:  # Avoid tiny contour
+            if radius >= 3 :  # Avoid tiny contour
                 return center, contour
     return None, None
 
