@@ -4,6 +4,26 @@
 
 }
 
+.body {
+  background-color: black;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+
+
+
+}
+* {
+  background-color: black;
+}
+
+body, p, h1, h2, h3, h4, h5, h6, a, button, input, select, textarea {
+  color: white; /* or any color that contrasts well with black */
+}
+
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
