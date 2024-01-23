@@ -1,8 +1,7 @@
 
-
 .calibration-container {
   text-align: center;
-  background: white; /* Background for content */
+  background: black; /* Background for content */
   display: flex; /* Using Flexbox for layout */
   flex-direction: column; /* Stack children vertically */
   align-items: center; /* Center-align items horizontally */

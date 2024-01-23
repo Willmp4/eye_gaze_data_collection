@@ -25,7 +25,7 @@ function App() {
 
   return (
     <QueueProvider>
-      <div className={isFullScreen ? "App fullscreen" : "App"}>
+      <div className={isFullScreen ? "App fullscreen" : "App"} style={{ backgroundColor: "black" }}>
         <h1>Welcome to the Gaze Capture App</h1>
         <UserGuideModal />
         {!isCalibrationComplete ? (
