@@ -52,27 +52,47 @@ def detect_pupil(eye_image):
 
     return None, None
 
-# Apply histogram equalization to an eye region
-def equalize_histogram_color(image):
-    # Convert to YUV color space
-    img_yuv = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
-    # Equalize the histogram of the Y channel
-    img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
-    # Convert back to BGR color space
-    img_output = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
-    return img_output
+def equalize_adaptive_histogram(image):
+    # Convert to grayscale if the image is not already
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+    
+    # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    equalized = clahe.apply(gray)
+
+    return equalized
+
+def apply_noise_reduction(image, method='gaussian', kernel_size=5):
+    if method == 'gaussian':
+        return cv2.GaussianBlur(image, (kernel_size, kernel_size), 0)
+    elif method == 'median':
+        return cv2.medianBlur(image, kernel_size)
+    else:
+        return image  # No noise reduction applied
+
+def eye_aspect_ratio(eye_points):
+    A = np.linalg.norm(np.array(eye_points[1]) - np.array(eye_points[5]))
+    B = np.linalg.norm(np.array(eye_points[2]) - np.array(eye_points[4]))
+    C = np.linalg.norm(np.array(eye_points[0]) - np.array(eye_points[3]))
+    ear = (A + B) / (2.0 * C)
+    return ear
+
+
+def is_image_blurry(image, threshold=10):
+    # Calculate the Laplacian of the image and then the focus
+    # measure, which is the variance of the Laplacian
+    variance_of_laplacian = cv2.Laplacian(image, cv2.CV_64F).var()
+    return variance_of_laplacian < threshold
+
 
 # Apply bilateral filter to an eye region
 def apply_bilateral_filter(image, d=9, sigmaColor=75, sigmaSpace=75):
     return cv2.bilateralFilter(image, d, sigmaColor, sigmaSpace)
 
-def convert_eye_to_binary(eye_image, blur_ksize=7, threshold_block_size=11, threshold_C=2):
-    # Check if eye_image is grayscale (single channel)
-    if len(eye_image.shape) == 2 or eye_image.shape[2] == 1:
-        pass
-    else:
-        eye_image = equalize_histogram_color(eye_image)
-    
+def convert_eye_to_binary(eye_image, blur_ksize=7, threshold_block_size=11, threshold_C=2):    
     # Convert to grayscale if the image is not already
     if len(eye_image.shape) == 3:
         gray_eye = cv2.cvtColor(eye_image, cv2.COLOR_BGR2GRAY)
