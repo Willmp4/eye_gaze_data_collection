@@ -28,35 +28,28 @@ def detect_pupil(eye_image):
     morphed_eye = cv2.morphologyEx(eye_image, cv2.MORPH_CLOSE, kernel, iterations=2)
     # Find contours which will give us the pupil
     contours, _ = cv2.findContours(morphed_eye, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # Sorting contours is done here if needed
-    # Find contours which will give us the pupil
-    contours, _ = cv2.findContours(morphed_eye, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
     # Assume the largest contour is the pupil
     contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
+    contours = [c for c in contours if cv2.contourArea(c) > 0]
 
-    if contours:
-        # Calculate the centroid of the pupil
-        M = cv2.moments(contours[0])
-        if M['m00'] != 0:
-            cx = int(M['m10']/M['m00'])
-            cy = int(M['m01']/M['m00'])
-            return (cx, cy), contours[0]
-    contours, _ = cv2.findContours(morphed_eye, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Check contours
     for contour in contours:
-        # Calculate the circularity of the contour5180
-        perimeter = cv2.arcLength(contour, True)
         area = cv2.contourArea(contour)
-        if area == 0:
-            print("area is 0")
-            continue
-        circularity = 4 * np.pi * (area / (perimeter * perimeter))
-        # Filter based on circularity and area
-        if 0.1 < circularity < 1 and area > 10:  # Adjust thresholds as needed
-            (x, y), radius = cv2.minEnclosingCircle(contour)
-            center = (int(x), int(y))
-            radius = int(radius)
-            if radius >= 3 :  # Avoid tiny contour
-                return center, contour
+        perimeter = cv2.arcLength(contour, True)
+        circularity = 4 * np.pi * (area / (perimeter ** 2))
+
+        # Check if contour is circular enough and of reasonable area
+        if 0.1 < circularity < 1.1 and 7 < area < 500:
+            M = cv2.moments(contour)
+            if M['m00'] != 0:
+                cx = int(M['m10']/M['m00'])
+                cy = int(M['m01']/M['m00'])
+                return (cx, cy), contour
+        else:
+            print(area, circularity)
+
+
     return None, None
 
 # Apply histogram equalization to an eye region
