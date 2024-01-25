@@ -2,7 +2,7 @@
 import cv2
 import numpy as np
 
-def extract_eye_region(image, landmarks, eye_points, buffer= 10):
+def extract_eye_region(image, landmarks, eye_points, buffer= 5):
     # Extract the coordinates of the eye points
     region = np.array([(landmarks.part(point).x, landmarks.part(point).y) for point in eye_points])
     # Create a mask with zeros
