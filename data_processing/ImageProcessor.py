@@ -1,24 +1,14 @@
 import cv2
 import numpy as np
-import json
-import dlib
+
 class ImageProcessor:
-    def __init__(self, sr_model_path="EDSR_x4.pb"):
-        self.sr_model_path = sr_model_path
-        self.detector = dlib.get_frontal_face_detector()
-        self.predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
-        self.sr_model = None
+    def __init__(self, detector, predictor, sr_model):
+        self.detector = detector
+        self.predictor = predictor
+        self.sr_model = sr_model
 
-    def ensure_sr_model_loaded(self):
-        if self.sr_model is None:
-            self.sr_model = self.initialize_sr_model(self.sr_model_path)
+    # Rest of your methods, utilizing the passed-in resources
 
-
-    def initialize_sr_model(self, sr_model_path):
-        sr_model = cv2.dnn_superres.DnnSuperResImpl_create()
-        sr_model.readModel(sr_model_path)
-        sr_model.setModel("edsr", 4)
-        return sr_model
     
     def enhance_image_resolution(self, image, sr_model):
         # Enhance the resolution of the image using the preloaded model

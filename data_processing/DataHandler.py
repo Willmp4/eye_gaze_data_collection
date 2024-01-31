@@ -71,15 +71,36 @@ class DataHandler:
         print(f"Found {len(metadata_keys)} metadata files")
         return metadata_keys
 
-    def process_s3_bucket_data(self, bucket_name, local_base_dir, process_data_if_needed, data_handler, image_processor, csv_manager):
-        s3_client = boto3.client('s3')
-        
-        # First, get a list of all metadata files
-        metadata_keys = self.get_all_metadata_keys(bucket_name, s3_client)
-        
-        # Now process each metadata and its associated directory
+    def should_process(self, metadata_key):
+        metadata = self.get_metadata(self.bucket_name, metadata_key, self.s3_client)
+        return 'cameraInfo' in metadata
+
+    def process_s3_bucket_data(self, bucket_name, local_base_dir, process_image, csv_manager):
+        metadata_keys = self.get_all_metadata_keys(bucket_name, self.s3_client)
+
         for metadata_key in metadata_keys:
+            # Correctly define subdir_prefix from metadata_key
             subdir_prefix = '/'.join(metadata_key.split('/')[:-1]) + '/'
-            print(f"Processing data in {subdir_prefix}")
-            self.download_data(subdir_prefix, local_base_dir, s3_client, bucket_name)
-            process_data_if_needed(subdir_prefix, local_base_dir, s3_client, bucket_name, data_handler, image_processor, csv_manager)
+
+            if self.should_process(metadata_key):
+                self.download_data(subdir_prefix, local_base_dir, self.s3_client, bucket_name)
+
+                # Get camera info directly from the metadata
+                metadata = self.get_metadata(bucket_name, metadata_key, self.s3_client)
+                if 'cameraInfo' in metadata:
+                    camera_matrix, dist_coeffs = self.get_camera_info(metadata['cameraInfo'])
+
+                    # Retrieve image paths for both calibration and eye gaze images using the correct subdir_prefix
+                    calibration_image_paths = self.get_image_paths(bucket_name, subdir_prefix, 'calibration_images/', self.s3_client)
+                    eye_gaze_image_paths = self.get_image_paths(bucket_name, subdir_prefix, 'eye_gaze_images/', self.s3_client)
+                    
+                    # Process images based on the type and paths collected
+                    if calibration_image_paths:
+                        process_image(calibration_image_paths, local_base_dir, subdir_prefix, 'calibration_data.csv', csv_manager, (camera_matrix, dist_coeffs))
+                    
+                    if eye_gaze_image_paths:
+                        process_image(eye_gaze_image_paths, local_base_dir, subdir_prefix, 'eye_gaze_data.csv', csv_manager, (camera_matrix, dist_coeffs))
+                else:
+                    print(f"No camera info available, skipping processing for {subdir_prefix}")
+            else:
+                print(f"No processing needed for {subdir_prefix}")

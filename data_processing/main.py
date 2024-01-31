@@ -2,56 +2,32 @@ import os
 import cv2
 import numpy as np
 import json
-import DataHandler
-import ImageProcessor
-import CSVManager
+from DataHandler import DataHandler
+from ImageProcessor import ImageProcessor
+from CSVManager import CSVManager
 from multiprocessing import Pool
 import pandas as pd
+import dlib
+import cv2
+
+# Global initialization
+global_detector = dlib.get_frontal_face_detector()
+global_predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+global_sr_model = cv2.dnn_superres.DnnSuperResImpl_create()
+global_sr_model.readModel("EDSR_x4.pb")
+global_sr_model.setModel("edsr", 4)
 
 def main():
     bucket_name = 'eye-gaze-data'
     local_base_dir = './'
-    data_handler = DataHandler.DataHandler(bucket_name, local_base_dir)
+    data_handler = DataHandler(bucket_name, local_base_dir)
+    csv_manager = CSVManager(local_base_dir)
 
-    image_processor = ImageProcessor.ImageProcessor()
-
-    csv_manager = CSVManager.CSVManager(local_base_dir)
-
-    # Pass instances to process_data_if_needed
-    data_handler.process_s3_bucket_data(bucket_name, local_base_dir, process_data_if_needed, data_handler, image_processor, csv_manager)
-
-def process_data_if_needed(key_prefix, local_base_dir, s3_client, bucket_name, data_handler, image_processor, csv_manager):
-    # Retrieve metadata and determine if processing is needed
-    metadata_key = f"{key_prefix}metadata.json"
-    metadata_object = s3_client.get_object(Bucket=bucket_name, Key=metadata_key)
-    metadata_content = metadata_object['Body'].read().decode('utf-8')
-    metadata = json.loads(metadata_content)
-
-    # If cameraInfo is present in metadata, process the data
-    if 'cameraInfo' in metadata:
-        print(f"Processing data in {key_prefix}")
-        camera_matrix, dist_coeffs = data_handler.get_camera_info(metadata['cameraInfo'])
-        
-        # Get the list of image paths that need processing
-        calibration_image_paths = data_handler.get_image_paths(bucket_name, key_prefix, 'calibration_images/', s3_client)
-        eye_gaze_image_paths = data_handler.get_image_paths(bucket_name, key_prefix, 'eye_gaze_images/', s3_client)
-        
-        subdir_prefix = key_prefix.rstrip('/')  # Ensure the prefix doesn't end with a '/'
-        
-        # Process calibration images
-        if calibration_image_paths:
-            process_images(calibration_image_paths, local_base_dir, subdir_prefix, 'calibration_data.csv', data_handler, image_processor, csv_manager, camera_info=(camera_matrix, dist_coeffs))
-        
-        # Process eye gaze images
-        if eye_gaze_image_paths:
-            process_images(eye_gaze_image_paths, local_base_dir, subdir_prefix, 'eye_gaze_data.csv',  data_handler, image_processor, csv_manager, camera_info=(camera_matrix, dist_coeffs),)
-        
-    else:
-        print(f"No processing needed for {key_prefix}")
+    data_handler.process_s3_bucket_data(bucket_name, local_base_dir, process_images, csv_manager)
 
 def process_single_image(image_path, existing_data, local_base_dir, subdirectory, csv_file_name, camera_info, csv_manager):
-    image_processor = ImageProcessor.ImageProcessor()
-    image_processor.ensure_sr_model_loaded()
+    image_processor = ImageProcessor(global_detector, global_predictor, global_sr_model)
+
     try:
         # Construct the full path to the image
         full_image_path = os.path.join(local_base_dir, image_path)
@@ -88,12 +64,14 @@ def process_single_image(image_path, existing_data, local_base_dir, subdirectory
             data_row = csv_manager.format_eye_gaze_data_row(cursor_or_calibration, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox, head_pose)
 
         # Return the processed data for this image
+        print(f"Processed image {image_path}")
         return [image_path] + data_row
     except Exception as e:
         print(f"Error processing image {image_path}: {e}")
         return None
     
-def process_images(image_paths, local_base_dir, subdirectory, csv_file_name, data_handler, image_processor, csv_manager, camera_info):
+def process_images(image_paths, local_base_dir, subdirectory, csv_file_name, csv_manager, camera_info):
+    
     image_data = []
 
     # Path to the current CSV file
@@ -107,7 +85,7 @@ def process_images(image_paths, local_base_dir, subdirectory, csv_file_name, dat
         existing_data = None  # No existing data
 
     # Create a pool of worker processes
-    with Pool(processes=8) as pool:
+    with Pool(processes=2) as pool:
         print(f"Processing {len(image_paths)} images")
         
         # Prepare arguments for each process, including existing data
