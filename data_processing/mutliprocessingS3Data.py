@@ -316,23 +316,23 @@ def process_local_data(local_base_dir, image_dir_name, csv_file_name, camera_inf
 
 def main():
     # Your code here
-    # bucket_name = 'eye-gaze-data'
-    # local_base_dir = './'
-    # os.makedirs(local_base_dir, exist_ok=True)
+    bucket_name = 'eye-gaze-data'
+    local_base_dir = './'
+    os.makedirs(local_base_dir, exist_ok=True)
 
-    # process_s3_bucket_data(bucket_name, local_base_dir)
+    process_s3_bucket_data(bucket_name, local_base_dir)
 
     # # Assuming the local_base_dir is the current directory ('./')
-    local_base_dir = './data/WilliamOld'
-    image_dir_name = 'images'
-    csv_file_name = 'data1.csv'
+    # local_base_dir = './data/WilliamOld'
+    # image_dir_name = 'images'
+    # csv_file_name = 'data1.csv'
 
-    # The camera information, as you specified
-    camera_matrix = np.array([[560, 0, 320], [0, 560, 240], [0, 0, 1]], dtype='double')
-    dist_coeffs = np.array([0, 0, 0, 0, 0], dtype='double')
+    # # The camera information, as you specified
+    # camera_matrix = np.array([[560, 0, 320], [0, 560, 240], [0, 0, 1]], dtype='double')
+    # dist_coeffs = np.array([0, 0, 0, 0, 0], dtype='double')
 
-    # Process the local data
-    process_local_data(local_base_dir, image_dir_name, csv_file_name, (camera_matrix, dist_coeffs))
+    # # Process the local data
+    # process_local_data(local_base_dir, image_dir_name, csv_file_name, (camera_matrix, dist_coeffs))
 
 if __name__ == "__main__":
     main()
