@@ -79,28 +79,32 @@ class DataHandler:
         metadata_keys = self.get_all_metadata_keys(bucket_name, self.s3_client)
 
         for metadata_key in metadata_keys:
-            # Correctly define subdir_prefix from metadata_key
             subdir_prefix = '/'.join(metadata_key.split('/')[:-1]) + '/'
+            local_dir = os.path.join(local_base_dir, subdir_prefix)
+            should_download = not os.path.exists(local_dir) or not os.listdir(local_dir)
 
-            if self.should_process(metadata_key):
+            # Determine if the data needs to be processed based on the presence of cameraInfo in metadata
+            needs_processing = self.should_process(metadata_key)
+
+            # Download data if it's not already downloaded
+            if should_download:
                 self.download_data(subdir_prefix, local_base_dir, self.s3_client, bucket_name)
 
-                # Get camera info directly from the metadata
+            # Process data if it needs processing, regardless of whether it was just downloaded or was already present
+            if needs_processing:
                 metadata = self.get_metadata(bucket_name, metadata_key, self.s3_client)
                 if 'cameraInfo' in metadata:
                     camera_matrix, dist_coeffs = self.get_camera_info(metadata['cameraInfo'])
-
-                    # Retrieve image paths for both calibration and eye gaze images using the correct subdir_prefix
                     calibration_image_paths = self.get_image_paths(bucket_name, subdir_prefix, 'calibration_images/', self.s3_client)
                     eye_gaze_image_paths = self.get_image_paths(bucket_name, subdir_prefix, 'eye_gaze_images/', self.s3_client)
-                    
-                    # Process images based on the type and paths collected
+
                     if calibration_image_paths:
                         process_image(calibration_image_paths, local_base_dir, subdir_prefix, 'calibration_data.csv', csv_manager, (camera_matrix, dist_coeffs))
-                    
+
                     if eye_gaze_image_paths:
                         process_image(eye_gaze_image_paths, local_base_dir, subdir_prefix, 'eye_gaze_data.csv', csv_manager, (camera_matrix, dist_coeffs))
                 else:
                     print(f"No camera info available, skipping processing for {subdir_prefix}")
-            else:
-                print(f"No processing needed for {subdir_prefix}")
+            elif not should_download and not needs_processing:
+                print(f"No processing or downloading needed for {subdir_prefix}")
+
