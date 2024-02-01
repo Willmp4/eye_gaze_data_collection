@@ -80,20 +80,20 @@ class DataHandler:
 
         for metadata_key in metadata_keys:
             subdir_prefix = '/'.join(metadata_key.split('/')[:-1]) + '/'
+            print(f"Processing data for {subdir_prefix}")
             local_dir = os.path.join(local_base_dir, subdir_prefix)
             should_download = not os.path.exists(local_dir) or not os.listdir(local_dir)
 
             # Determine if the data needs to be processed based on the presence of cameraInfo in metadata
             needs_processing = self.should_process(metadata_key)
 
-            # Download data if it's not already downloaded
-            if should_download:
-                self.download_data(subdir_prefix, local_base_dir, self.s3_client, bucket_name)
+
+            self.download_data(subdir_prefix, local_base_dir, self.s3_client, bucket_name)
 
             # Process data if it needs processing, regardless of whether it was just downloaded or was already present
             if needs_processing:
                 metadata = self.get_metadata(bucket_name, metadata_key, self.s3_client)
-                if 'cameraInfo' in metadata:
+                if 'cameraInfo' in metadata and subdir_prefix == 'data/cheif/':
                     camera_matrix, dist_coeffs = self.get_camera_info(metadata['cameraInfo'])
                     calibration_image_paths = self.get_image_paths(bucket_name, subdir_prefix, 'calibration_images/', self.s3_client)
                     eye_gaze_image_paths = self.get_image_paths(bucket_name, subdir_prefix, 'eye_gaze_images/', self.s3_client)
