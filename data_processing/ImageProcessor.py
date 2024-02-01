@@ -15,7 +15,7 @@ class ImageProcessor:
         enhanced_image = sr_model.upsample(image)
         return enhanced_image
 
-    def extract_eye_region(self, image, landmarks, eye_points, buffer=3):
+    def extract_eye_region(self, image, landmarks, eye_points, buffer=1):
         # Extract the coordinates of the eye points
         region = np.array([(landmarks.part(point).x, landmarks.part(point).y) for point in eye_points])
         # Create a mask with zeros
@@ -37,46 +37,33 @@ class ImageProcessor:
 
         return cropped_eye, (min_x, min_y, max_x, max_y)
 
-    def detect_pupil(self, eye_image):
+    def detect_pupil(self, eye_image, eye_center):
         # Enhance resolution
         eye_image = self.enhance_image_resolution(eye_image, self.sr_model)
 
-        # Preprocessing
         gray = cv2.cvtColor(eye_image, cv2.COLOR_BGR2GRAY)
+
+
         gray = cv2.equalizeHist(gray)  # Histogram Equalization
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)  # Gaussian Blur
 
-        # Edge detection
-        edged = cv2.Canny(blurred, 50, 100)
-
         # Find contours
-        contours, _ = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(blurred, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
 
         # Sort contours by area and filter
-        contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
-
-        # Find contours
-        contours, _ = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        # Sort contours by area and filter
-        contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
         for contour in contours:
-            # Approximate the contour
-            peri = cv2.arcLength(contour, True)
-            approx = cv2.approxPolyDP(contour, 0.04 * peri, True)
-
-            # The pupil will be the first contour that is sufficiently circular
-            area = cv2.contourArea(contour)
-            if area > 30:  # You may need to adjust this threshold
-                M = cv2.moments(contour)
-                if M["m00"] != 0:
-                    cX = int(M["m10"] / M["m00"])
-                    cY = int(M["m01"] / M["m00"])
-                    return (cX, cY), contour
+            M = cv2.moments(contour)
+            if M["m00"] != 0:
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                cv2.circle(eye_image, (cX, cY), 7, (255, 255, 255), -1)
+                return (cX, cY), contour
 
         return None, None
-    
+        
     def pre_process_image(self, image):        
         # Initialize variables
         left_eye_info = right_eye_info = left_eye_bbox = right_eye_bbox = None
@@ -88,10 +75,10 @@ class ImageProcessor:
 
             for (i, (start, end)) in enumerate([(36,42), (42,48)]):
                 eye_landmarks = [(shape.part(point).x, shape.part(point).y) for point in range(start, end)]
-
+                eye_center = np.mean(eye_landmarks, axis=0).astype(int)  # Ensure you have integers for the center
                 eye_image, (eye_min_x, eye_min_y, eye_max_x, eye_max_y) = self.extract_eye_region(image, shape, range(start, end))
-
-                pupil_center, pupil_contour = self.detect_pupil(eye_image)
+    
+                pupil_center, pupil_contour = self.detect_pupil(eye_image, eye_center)
                 # After detecting the pupil in the cropped eye image:
                 if pupil_center:
                     # Scale the pupil center coordinates down to the original image size
