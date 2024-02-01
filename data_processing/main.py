@@ -103,7 +103,6 @@ def process_images(image_paths, local_base_dir, subdirectory, csv_file_name, csv
         # Collect results from each worker
         for result in results:
             if result is not None:
-                print(result)
                 image_data.append(result)
 
     # Create and replace the CSV file with the new data
