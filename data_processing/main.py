@@ -79,13 +79,14 @@ def process_images(image_paths, local_base_dir, subdirectory, csv_file_name, csv
 
     # Read existing data if CSV exists
     if os.path.exists(current_csv_path):
+        print(f"Reading existing data from {current_csv_path}")
         current_data_df = pd.read_csv(current_csv_path, header=None)
         existing_data = current_data_df.iloc[:, 1:3].values.tolist()
     else:
         existing_data = None  # No existing data
 
     # Create a pool of worker processes
-    with Pool(processes=2) as pool:
+    with Pool(processes=8) as pool:
         print(f"Processing {len(image_paths)} images")
         
         # Prepare arguments for each process, including existing data
@@ -110,5 +111,3 @@ def process_images(image_paths, local_base_dir, subdirectory, csv_file_name, csv
 
 if __name__ == '__main__':
     main()
-
-
