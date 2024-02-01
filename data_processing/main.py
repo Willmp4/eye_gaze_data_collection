@@ -71,27 +71,28 @@ def process_single_image(image_path, existing_data, local_base_dir, subdirectory
         return None
     
 def process_images(image_paths, local_base_dir, subdirectory, csv_file_name, csv_manager, camera_info):
-    
     image_data = []
 
     # Path to the current CSV file
     current_csv_path = os.path.join(local_base_dir, subdirectory, csv_file_name)
 
-    # Read existing data if CSV exists
+    # Create a mapping of image paths to existing data
+    existing_data_map = {}
     if os.path.exists(current_csv_path):
         print(f"Reading existing data from {current_csv_path}")
         current_data_df = pd.read_csv(current_csv_path, header=None)
-        existing_data = current_data_df.iloc[:, 1:3].values.tolist()
-    else:
-        existing_data = None  # No existing data
+        for idx, row in current_data_df.iterrows():
+            image_path = row[0]
+            existing_data_map[image_path] = row[1:3].values.tolist()
 
-    # Create a pool of worker processes
-    with Pool(processes=8) as pool:
+    with Pool(processes=1) as pool:
         print(f"Processing {len(image_paths)} images")
         
-        # Prepare arguments for each process, including existing data
-        # Now include image_processor and csv_manager in the arguments
-        args = [(path, existing_data[idx] if existing_data else None, local_base_dir, subdirectory, csv_file_name, camera_info, csv_manager) for idx, path in enumerate(image_paths)]
+        # Prepare arguments for each process
+        args = []
+        for image_path in image_paths:
+            existing_data = existing_data_map.get(image_path, [np.nan, np.nan])  # Use mapped data or default
+            args.append((image_path, existing_data, local_base_dir, subdirectory, csv_file_name, camera_info, csv_manager))
 
         # Map each image to a worker process
         try:
@@ -107,6 +108,7 @@ def process_images(image_paths, local_base_dir, subdirectory, csv_file_name, csv
 
     # Create and replace the CSV file with the new data
     csv_manager.create_and_replace_csv(local_base_dir, subdirectory, csv_file_name, image_data)
+
 
 if __name__ == '__main__':
     main()
