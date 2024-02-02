@@ -7,9 +7,6 @@ class ImageProcessor:
         self.predictor = predictor
         self.sr_model = sr_model
 
-    # Rest of your methods, utilizing the passed-in resources
-
-    
     def enhance_image_resolution(self, image, sr_model):
         # Enhance the resolution of the image using the preloaded model
         enhanced_image = sr_model.upsample(image)
