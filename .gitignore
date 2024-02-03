@@ -18,3 +18,4 @@ __init__.py
 /data_processing/models/*
 
 *.png
+*.pkl
