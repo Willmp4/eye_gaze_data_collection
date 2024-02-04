@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 import json
-from ImageProcessor import ImageProcessor
+from data_processing.image_processing import ImageProcessor
 from multiprocessing import Pool
 import pandas as pd
 import dlib

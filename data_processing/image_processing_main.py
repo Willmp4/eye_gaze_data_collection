@@ -2,8 +2,8 @@ import os
 import cv2
 import numpy as np
 import json
-from DataHandler import DataHandler
-from ImageProcessor import ImageProcessor
+from data_processing.data_handelr import DataHandler
+from data_processing.image_processing import ImageProcessor
 from CSVManager import CSVManager
 from multiprocessing import Pool
 import pandas as pd
