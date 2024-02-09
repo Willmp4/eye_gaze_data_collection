@@ -2,8 +2,8 @@ import os
 import cv2
 import numpy as np
 import json
-from data_processing.data_handelr import DataHandler
-from data_processing.image_processing import ImageProcessor
+from data_handelr import DataHandler
+from image_processing import ImageProcessor
 from CSVManager import CSVManager
 from multiprocessing import Pool
 import pandas as pd
@@ -85,7 +85,7 @@ def process_images(image_paths, local_base_dir, subdirectory, csv_file_name, csv
             image_path = row[0]
             existing_data_map[image_path] = row[1:3].values.tolist()
 
-    with Pool(processes=10) as pool:
+    with Pool(processes=6) as pool:
         print(f"Processing {len(image_paths)} images")
         
         # Prepare arguments for each process
