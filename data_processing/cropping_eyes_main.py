@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 import json
-from data_processing.image_processing import ImageProcessor
+from image_processing import ImageProcessor
 from multiprocessing import Pool
 import pandas as pd
 import dlib
@@ -27,7 +27,7 @@ def main():
     print(f"Processed {len(X)} items.")
 
     # Save the processed data
-    with open('res_processed_data_buffer.pkl', 'wb') as f:
+    with open('./pickel_files/calibration_processed_data_buffer.pkl', 'wb') as f:
         pickle.dump((X,Y), f)
 
 def get_combined_eyes(frame, global_sr_model, global_detector, global_predictor, target_size=(40, 48)):
@@ -168,8 +168,11 @@ def process_images_parallel(base_dir):
             print(f"Processing images in {subdir}")
             metadata_file_path = os.path.join(subdir, 'metadata.json')
             csv_files = glob(os.path.join(subdir, '*.csv'))
+
+            csv_files = [csv_file for csv_file in csv_files if 'calibration' in csv_file]
             
             for csv_file in csv_files:
+                print(f"Processing file: {csv_file}")
                 dataset = pd.read_csv(csv_file, header=None)
                 # Update here: Remove extra parentheses to correctly unpack arguments
                 data_rows = [(tuple(row), metadata_file_path, base_dir) for index, row in dataset.iterrows()]
