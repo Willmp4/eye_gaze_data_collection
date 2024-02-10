@@ -12,7 +12,7 @@ class ImageProcessor:
         enhanced_image = sr_model.upsample(image)
         return enhanced_image
 
-    def extract_eye_region(self, image, landmarks, eye_points, buffer=1):
+    def extract_eye_region(self, image, landmarks, eye_points, buffer=0):
         # Extract the coordinates of the eye points
         region = np.array([(landmarks.part(point).x, landmarks.part(point).y) for point in eye_points])
         # Create a mask with zeros
