@@ -127,7 +127,18 @@ def process_row(data, metadata_file_path, local_base_dir):
     screen_width, screen_height = get_screen_size(metadata_file_path)
 
     # Unpack your data
-    image_path, cursor_x, cursor_y, *eye_box_pupil_data, head_pose, head_translation = data
+    image_path, cursor_x, cursor_y,= data[:3]
+            # Check if the image exists in either directory
+    eye_gaze_image_path = os.path.join(image_path)
+    calibration_image_path = os.path.join(image_path)
+
+    if os.path.exists(eye_gaze_image_path):
+        full_image_path = eye_gaze_image_path
+    elif os.path.exists(calibration_image_path):
+        full_image_path = calibration_image_path
+    else:
+        print(f"Image not found: {image_path}")
+        return None 
     
     full_image_path = os.path.join(image_path)
     image = cv2.imread(full_image_path)
@@ -140,12 +151,12 @@ def process_row(data, metadata_file_path, local_base_dir):
         return None
     
     # Normalize eye box pupil data
-    normalized_eye_box_pupil_data = [float(coord) / screen_width if i % 2 == 0 else float(coord) / screen_height for i, coord in enumerate(eye_box_pupil_data)]
+    # normalized_eye_box_pupil_data = [float(coord) / screen_width if i % 2 == 0 else float(coord) / screen_height for i, coord in enumerate(eye_box_pupil_data)]
 
-    # Parse and normalize head pose and translation data
-    head_pose_data = [float(x) for x in head_pose.strip('"').split(',')]
-    head_translation_data = [float(x) for x in head_translation.strip('"').split(',')]
-    normalized_head_pose_data = normalize_head_pose(head_pose_data + head_translation_data)
+    # # Parse and normalize head pose and translation data
+    # head_pose_data = [float(x) for x in head_pose.strip('"').split(',')]
+    # head_translation_data = [float(x) for x in head_translation.strip('"').split(',')]
+    # normalized_head_pose_data = normalize_head_pose(head_pose_data + head_translation_data)
     
     # Normalize cursor positions
     normalized_cursor_x = float(cursor_x) / screen_width
@@ -155,7 +166,7 @@ def process_row(data, metadata_file_path, local_base_dir):
     # X: Combined eyes image
     # Y: Cursor position, eye box pupil data, head pose data
     X = combined_eyes
-    Y = [normalized_cursor_x, normalized_cursor_y] + normalized_eye_box_pupil_data + normalized_head_pose_data
+    Y = [normalized_cursor_x, normalized_cursor_y, full_image_path]
     return X, Y
 
 def process_images_parallel(base_dir):
@@ -169,7 +180,7 @@ def process_images_parallel(base_dir):
             metadata_file_path = os.path.join(subdir, 'metadata.json')
             csv_files = glob(os.path.join(subdir, '*.csv'))
 
-            csv_files = [csv_file for csv_file in csv_files if 'calibration' not in csv_file]
+            # csv_files = [csv_file for csv_file in csv_files if 'calibration' not in csv_file]
             
             for csv_file in csv_files:
                 print(f"Processing file: {csv_file}")
