@@ -27,10 +27,10 @@ def main():
     print(f"Processed {len(X)} items.")
 
     # Save the processed data
-    with open('./pickel_files/calibration_data.pkl', 'wb') as f:
+    with open('./pickel_files/all_data_no_super_res.pkl', 'wb') as f:
         pickle.dump((X,Y), f)
 
-def get_combined_eyes(frame, global_sr_model, global_detector, global_predictor, target_size=(40, 48)):
+def get_combined_eyes(frame, global_sr_model, global_detector, global_predictor, target_size=(50, 55)):
     """
     Detects, enhances, and combines the eye regions from the frame using the extract_eye_region method.
     Args:
@@ -56,12 +56,12 @@ def get_combined_eyes(frame, global_sr_model, global_detector, global_predictor,
         right_eye_region, _ = ImageProcessor.extract_eye_region(frame, landmarks, right_eye_points)
 
         # Enhance image resolution and normalize
-        left_eye_super_res = ImageProcessor.enhance_image_resolution(left_eye_region, global_sr_model).astype(np.float32) / 255.0
-        right_eye_super_res = ImageProcessor.enhance_image_resolution(right_eye_region, global_sr_model).astype(np.float32) / 255.0
+        # left_eye_super_res = ImageProcessor.enhance_image_resolution(left_eye_region, global_sr_model).astype(np.float32) / 255.0
+        # right_eye_super_res = ImageProcessor.enhance_image_resolution(right_eye_region, global_sr_model).astype(np.float32) / 255.0
 
         # Resize images to the target size
-        left_eye_resized = cv2.resize(left_eye_super_res, target_size, interpolation=cv2.INTER_AREA)
-        right_eye_resized = cv2.resize(right_eye_super_res, target_size, interpolation=cv2.INTER_AREA)
+        left_eye_resized = cv2.resize(left_eye_region, target_size, interpolation=cv2.INTER_AREA).astype(np.float32) / 255.0
+        right_eye_resized = cv2.resize(right_eye_region, target_size, interpolation=cv2.INTER_AREA).astype(np.float32) / 255.0
 
         # Combine the eyes side by side
         combined_eyes = np.hstack([left_eye_resized, right_eye_resized])
