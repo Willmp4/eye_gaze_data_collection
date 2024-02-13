@@ -19,3 +19,4 @@ __init__.py
 
 *.png
 *.pkl
+*.json
