@@ -21,3 +21,4 @@ __init__.py
 *.pkl
 *.json
 data_processing/MPIIGaze
+data_processing/process_MPIIGaze/progress_log.txt
