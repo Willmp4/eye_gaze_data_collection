@@ -85,7 +85,7 @@ def process_images(image_paths, local_base_dir, subdirectory, csv_file_name, csv
             image_path = row[0]
             existing_data_map[image_path] = row[1:3].values.tolist()
 
-    with Pool(processes=6) as pool:
+    with Pool() as pool:
         print(f"Processing {len(image_paths)} images")
         
         # Prepare arguments for each process
