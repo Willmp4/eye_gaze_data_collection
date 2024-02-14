@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 class ImageProcessor:
     def __init__(self, detector, predictor, sr_model):
@@ -12,27 +13,25 @@ class ImageProcessor:
         enhanced_image = sr_model.upsample(image)
         return enhanced_image
 
-    def extract_eye_region(self, image, landmarks, eye_points, buffer=0):
-        # Extract the coordinates of the eye points
-        region = np.array([(landmarks.part(point).x, landmarks.part(point).y) for point in eye_points])
-        # Create a mask with zeros
-        height, width = image.shape[:2]
-        mask = np.zeros((height, width), np.uint8)
-        # Fill the mask with the polygon defined by the eye points
-        cv2.fillPoly(mask, [region], 255)
-        # Bitwise AND operation to isolate the eye region
-        eye = cv2.bitwise_and(image, image, mask=mask)
-        # Cropping the eye region
-        (min_x, min_y) = np.min(region, axis=0)
-        (max_x, max_y) = np.max(region, axis=0)
+    def extract_eye_region(self, image, landmarks, left_eye_points, right_eye_points, nose_bridge_points, forehead_points):
+        # Combine the eye, nose bridge, and forehead points
+        eye_points = left_eye_points + right_eye_points
+        all_points = eye_points + nose_bridge_points + forehead_points
 
-        min_x = max(min_x - buffer, 0)
-        min_y = max(min_y - buffer, 0)
-        max_x = min(max_x + buffer, width)
-        max_y = min(max_y + buffer, height)
-        cropped_eye = eye[min_y:max_y, min_x:max_x]
+        # Extract the coordinates of the combined points
+        region = np.array([(landmarks.part(point).x, landmarks.part(point).y) for point in all_points])
 
-        return cropped_eye, (min_x, min_y, max_x, max_y)
+        # Find the bounding box coordinates
+        min_x = np.min(region[:, 0])
+        max_x = np.max(region[:, 0])
+        min_y = np.min(region[:, 1])
+        max_y = np.max(region[:, 1])
+
+        # Crop the region to create a rectangle
+        cropped_region = image[min_y:max_y, min_x:max_x]
+
+        return cropped_region, (min_x, min_y, max_x, max_y)
+
 
     def detect_pupil(self, eye_image, eye_center):
         # Enhance resolution
