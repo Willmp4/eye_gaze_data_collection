@@ -27,46 +27,54 @@ def main():
     print(f"Processed {len(X)} items.")
 
     # Save the processed data
-    with open('./pickel_files/all_data_no_super_res.pkl', 'wb') as f:
+    with open('./pickel_files/all_data_200_100.pkl', 'wb') as f:
         pickle.dump((X,Y), f)
 
-def get_combined_eyes(frame, global_sr_model, global_detector, global_predictor, target_size=(50, 55)):
+
+def get_combined_eyes(frame, global_detector, global_predictor, target_size=(200, 100)):
     """
-    Detects, enhances, and combines the eye regions from the frame using the extract_eye_region method.
+    Detects, enhances, and combines the eye regions including the nose bridge from the frame.
     Args:
         frame: The input image frame.
-        global_sr_model: Super-resolution model.
         global_detector: Face detector.
         global_predictor: Landmark predictor.
-        target_size: Target size for resizing each eye region.
+        target_size: Target size for resizing the combined eye region.
     Returns:
-        The combined eye regions, or None if not detected.
+        The combined eye regions including the nose bridge, or None if not detected.
     """
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = global_detector(gray)
 
+    # super resolution image
     for face in faces:
         landmarks = global_predictor(gray, face)
 
+        forehead_points = [20, 21, 22, 23, 0 ,16]
         left_eye_points = [36, 37, 38, 39, 40, 41]
         right_eye_points = [42, 43, 44, 45, 46, 47]
+        nose_bridge_points = [27, 28, 29]  # Adjust if necessary for your landmarks
 
-        # Preprocess each eye region
-        left_eye_region, _ = ImageProcessor.extract_eye_region(frame, landmarks, left_eye_points)
-        right_eye_region, _ = ImageProcessor.extract_eye_region(frame, landmarks, right_eye_points)
+        # Extract the combined region of both eyes including the nose bridge
+        # Make sure to only use the first returned value (the image)
 
-        # Enhance image resolution and normalize
-        # left_eye_super_res = ImageProcessor.enhance_image_resolution(left_eye_region, global_sr_model).astype(np.float32) / 255.0
-        # right_eye_super_res = ImageProcessor.enhance_image_resolution(right_eye_region, global_sr_model).astype(np.float32) / 255.0
+        combined_eye_region, _ = ImageProcessor.extract_eye_region(
+            frame, landmarks, left_eye_points, right_eye_points, nose_bridge_points, forehead_points)
 
-        # Resize images to the target size
-        left_eye_resized = cv2.resize(left_eye_region, target_size, interpolation=cv2.INTER_AREA).astype(np.float32) / 255.0
-        right_eye_resized = cv2.resize(right_eye_region, target_size, interpolation=cv2.INTER_AREA).astype(np.float32) / 255.0
+        if isinstance(combined_eye_region, np.ndarray):
 
-        # Combine the eyes side by side
-        combined_eyes = np.hstack([left_eye_resized, right_eye_resized])
-        
-        return combined_eyes
+            # Apply super-resolution
+            # combined_eye_super_res = ImageProcessor.enhance_image_resolution(combined_eye_region, global_sr_model)
+
+            # Resize to the final target size
+            combined_eye_final_resized = cv2.resize(combined_eye_region, target_size, interpolation=cv2.INTER_AREA)
+
+            # combined_eye_final_resized = cv2.cvtColor(combined_eye_final_resized, cv2.COLOR_BGR2GRAY)
+
+
+            # Normalize if necessary
+            combined_eye_final_resized = combined_eye_final_resized.astype(np.float32) / 255.0
+
+            return combined_eye_final_resized
 
     return None
 
@@ -146,7 +154,8 @@ def process_row(data, metadata_file_path, local_base_dir):
         print(f"Image not found: {full_image_path}")
         return None
     
-    combined_eyes = get_combined_eyes(image, global_sr_model, global_detector, global_predictor)
+
+    combined_eyes = get_combined_eyes(image, global_detector, global_predictor)
     if combined_eyes is None:
         return None
     
@@ -172,7 +181,7 @@ def process_row(data, metadata_file_path, local_base_dir):
 def process_images_parallel(base_dir):
     subdirs = glob(os.path.join(base_dir, '*/'))
     
-    with Pool(processes=6) as pool:  # Use context manager to handle pool closure
+    with Pool(processes=1) as pool:  # Use context manager to handle pool closure
         results = []
 
         for subdir in subdirs:
