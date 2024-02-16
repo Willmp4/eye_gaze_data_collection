@@ -6,7 +6,7 @@ import numpy as np
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 
-def preprocess_frame(frame, target_size=(150, 75)):
+def preprocess_frame(frame, target_size=(200, 100)):
     """
     Preprocesses a frame for gaze prediction.
     Args:
@@ -121,6 +121,7 @@ def process_directory(subdir_info):
             print(f"Error reading h5 file for user in {subdir}. Skipping.")
             return None  # Skip this directory
         width_pixel, height_pixel = h5_data['width_pixel'][0], h5_data['height_pixel'][0]
+        print(f"Processing directory {subdir} with width_pixel={width_pixel} and height_pixel={height_pixel}")
 
         annotation_file = os.path.join(subdir, 'annotation.txt')
         if not os.path.exists(annotation_file):
@@ -147,7 +148,7 @@ def process_directory(subdir_info):
         print(f"Error while processing directory {subdir}: {e}")
         return None
 
-def process_images_and_annotations_parallel(base_path,start = 550, max_dirs = 600, batch_size=500):
+def process_images_and_annotations_parallel(base_path,start = 0, max_dirs = 50, batch_size=500):
     # List all subdirectories containing .jpg files
     subdirs = [(os.path.join(subdir), base_path) for subdir, _, files in os.walk(base_path) if any(file.endswith('.jpg') for file in files)]
 
@@ -167,7 +168,7 @@ def process_images_and_annotations_parallel(base_path,start = 550, max_dirs = 60
         all_X.extend(result['X'])
         all_Y.extend(result['Y'])
 
-    append_to_pickle({'X': all_X, 'Y': all_Y}, 'data_batch6.pkl')
+    append_to_pickle({'X': all_X, 'Y': all_Y}, 'image_batch0.pkl')
 
 # create main function
 def main():
