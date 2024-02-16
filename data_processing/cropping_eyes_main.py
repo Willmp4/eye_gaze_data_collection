@@ -31,7 +31,7 @@ def main():
         pickle.dump((X,Y), f)
 
 
-def get_combined_eyes(frame, global_detector, global_predictor, target_size=(150, 75)):
+def get_combined_eyes(frame, global_detector, global_predictor, target_size=(200, 100)):
     """
     Detects, enhances, and combines the eye regions including the nose bridge from the frame.
     Args:
