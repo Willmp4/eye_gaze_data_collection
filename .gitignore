@@ -22,4 +22,4 @@ __init__.py
 *.json
 data_processing/MPIIGaze
 data_processing/process_MPIIGaze/progress_log.txt
-data_processing/60K
+*.memmap
