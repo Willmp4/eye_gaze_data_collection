@@ -7,7 +7,7 @@ from multiprocessing import Pool
 import pandas as pd
 import dlib
 import os
-from glob import glob
+import glob
 import pandas as pd
 import pickle
 import cv2
@@ -78,11 +78,21 @@ def get_combined_eyes(frame, global_detector, global_predictor, target_size=(200
 
     return None
 
-def normalize_head_pose(head_pose_data):
-    mean = np.mean(head_pose_data, axis=0)
-    std = np.std(head_pose_data, axis=0)
-    normalized_head_pose = (head_pose_data - mean) / std
-    return normalized_head_pose
+def compute_global_stats(base_dir):
+    all_head_pose_data = []
+    for csv_file in glob.glob(os.path.join(base_dir, '**', '*.csv'), recursive=True):
+        if 'calibration' in csv_file:
+            data = pd.read_csv(csv_file, usecols=[15, 16])
+            for _, row in data.iterrows():
+                head_pose_data = [float(x) for x in row.iloc[0].strip('"').split(',')]
+                head_translation_data = [float(x) for x in row.iloc[1].strip('"').split(',')]
+                all_head_pose_data.append(head_pose_data + head_translation_data)
+    all_head_pose_data = np.array(all_head_pose_data)
+    mean = np.mean(all_head_pose_data, axis=0)
+    std = np.std(all_head_pose_data, axis=0)
+    min_vals = np.min(all_head_pose_data, axis=0)
+    max_vals = np.max(all_head_pose_data, axis=0)
+    return mean, std, min_vals, max_vals
 
 # Assuming normalize_head_pose and get_combined_eyes are defined as before
 def get_screen_size(metadata_file_path):
@@ -102,18 +112,18 @@ def get_screen_size(metadata_file_path):
 
         return screen_width, screen_height
 
-def parse_head_pose_data(row):
-    # Split the strings and convert to float
-    rotation_str, translation_str = row['head_pose'], row['head_translation']
-    rotation = [float(x) for x in rotation_str.strip('"').split(',')]
-    translation = [float(x) for x in translation_str.strip('"').split(',')]
-    return rotation + translation  # Combine into a single list
-
-def process_row(data, metadata_file_path, local_base_dir):
+def process_row(data, metadata_file_path, local_base_dir, min_vals, max_vals):
     screen_width, screen_height = get_screen_size(metadata_file_path)
-
+    data = data[0]
+    data = data[0]
+    image_path = data[0]
+    cursor_x = data[1]
+    cursor_y = data[2]
+    eye_box_pupil_data = data[3:15]
+    head_pose = data[15]
+    head_translation = data[16]
     # Unpack the row data
-    image_path, cursor_x, cursor_y, *eye_box_pupil_data,  head_pose, head_translation = data
+    # image_path, cursor_x, cursor_y, *eye_box_pupil_data, head_pose, head_translation = data
             # Check if the image exists in either directory
     eye_gaze_image_path = os.path.join(image_path)
     calibration_image_path = os.path.join(image_path)
@@ -142,7 +152,11 @@ def process_row(data, metadata_file_path, local_base_dir):
 
     head_pose_data = [float(x) for x in head_pose.strip('"').split(',')]
     head_translation_data = [float(x) for x in head_translation.strip('"').split(',')]
-    normalized_head_pose_data = normalize_head_pose(np.array(head_pose_data + head_translation_data))
+    
+    head_pose_data = np.array(head_pose_data + head_translation_data)
+    normalized_head_pose_data = (head_pose_data - min_vals) / (max_vals - min_vals)
+
+    print(normalized_head_pose_data)
     
     # Normalize cursor positions
     normalized_cursor_x = float(cursor_x) / screen_width
@@ -152,35 +166,36 @@ def process_row(data, metadata_file_path, local_base_dir):
     # X: Combined eyes image
     # Y: Cursor position, eye box pupil data, head pose data
     X = combined_eyes
-    Y = [normalized_cursor_x, normalized_cursor_y, full_image_path] + normalized_eye_box_pupil_data + normalized_head_pose_data
+# Assuming normalized_eye_box_pupil_data and normalized_head_pose_data are numpy arrays
+    Y = [normalized_cursor_x, normalized_cursor_y, full_image_path] + normalized_eye_box_pupil_data + normalized_head_pose_data.tolist()
     return X, Y
 
 def process_images_parallel(base_dir):
-    subdirs = glob(os.path.join(base_dir, '*/'))
+    subdirs = glob.glob(os.path.join(base_dir, '*/'))
+    mean, std, min_vals, max_vals = compute_global_stats(base_dir)
     
-    with Pool(processes=1) as pool:  # Use context manager to handle pool closure
+    with Pool(processes=1) as pool:
         results = []
-
         for subdir in subdirs:
             print(f"Processing images in {subdir}")
             metadata_file_path = os.path.join(subdir, 'metadata.json')
-            csv_files = glob(os.path.join(subdir, '*.csv'))
+            csv_files = glob.glob(os.path.join(subdir, '*.csv'))  # Correctly use glob.glob() here as well
 
             csv_files = [csv_file for csv_file in csv_files if 'calibration' in csv_file]
             
             for csv_file in csv_files:
                 print(f"Processing file: {csv_file}")
                 dataset = pd.read_csv(csv_file, header=None)
-                # Update here: Remove extra parentheses to correctly unpack arguments
-                data_rows = [(tuple(row), metadata_file_path, base_dir) for index, row in dataset.iterrows()]
-                
-                processed_data = pool.starmap(process_row, data_rows)
+                data_rows = [([row.values], metadata_file_path, base_dir, mean, std) for index, row in dataset.iterrows()]
+                                
+                processed_data = pool.starmap(process_row, [(row, metadata_file_path, base_dir, min_vals, max_vals) for row in data_rows])
                 results.extend(processed_data)
 
     X = [result[0] for result in results if result is not None]
     Y = [result[1] for result in results if result is not None]
 
     return X, Y
+
 
 if __name__ == '__main__':
     main()
