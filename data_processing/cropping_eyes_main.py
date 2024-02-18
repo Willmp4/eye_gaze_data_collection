@@ -78,33 +78,11 @@ def get_combined_eyes(frame, global_detector, global_predictor, target_size=(200
 
     return None
 
-def normalize_head_pose(head_pose_data, rotation_scale=180, translation_max_displacement=None):
-    """
-    Normalizes the head pose data.
-    Args:
-        head_pose_data: List containing the head pose data (rotation and translation vectors).
-        rotation_scale: Maximum value for the rotation vector components (180 for degrees, np.pi for radians).
-        translation_max_displacement: A tuple (max_x, max_y, max_z) representing the maximum displacement in each axis. If None, standard deviation normalization will be used.
-
-    Returns:
-        Normalized head pose data.
-    """
-    # Normalize rotation vectors
-    normalized_rotation = np.array(head_pose_data[:3]) / rotation_scale
-
-    # Normalize translation vectors
-    if translation_max_displacement:
-        max_x, max_y, max_z = translation_max_displacement
-        normalized_translation = np.array(head_pose_data[3:]) / np.array([max_x, max_y, max_z])
-    else:
-        # Standard deviation normalization
-        translation_vector = np.array(head_pose_data[3:])
-        std_dev = np.std(translation_vector)
-        mean_val = np.mean(translation_vector)
-        normalized_translation = (translation_vector - mean_val) / std_dev
-
-    return np.concatenate([normalized_rotation, normalized_translation]).tolist()
-
+def normalize_head_pose(head_pose_data):
+    mean = np.mean(head_pose_data, axis=0)
+    std = np.std(head_pose_data, axis=0)
+    normalized_head_pose = (head_pose_data - mean) / std
+    return normalized_head_pose
 
 # Assuming normalize_head_pose and get_combined_eyes are defined as before
 def get_screen_size(metadata_file_path):
@@ -162,10 +140,9 @@ def process_row(data, metadata_file_path, local_base_dir):
     # Normalize eye box pupil data
     normalized_eye_box_pupil_data = [float(coord) / screen_width if i % 2 == 0 else float(coord) / screen_height for i, coord in enumerate(eye_box_pupil_data)]
 
-    # Parse and normalize head pose and translation data
     head_pose_data = [float(x) for x in head_pose.strip('"').split(',')]
     head_translation_data = [float(x) for x in head_translation.strip('"').split(',')]
-    normalized_head_pose_data = normalize_head_pose(head_pose_data + head_translation_data)
+    normalized_head_pose_data = normalize_head_pose(np.array(head_pose_data + head_translation_data))
     
     # Normalize cursor positions
     normalized_cursor_x = float(cursor_x) / screen_width
