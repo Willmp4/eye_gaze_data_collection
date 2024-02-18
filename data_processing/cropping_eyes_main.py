@@ -189,7 +189,7 @@ def process_images_parallel(base_dir):
             metadata_file_path = os.path.join(subdir, 'metadata.json')
             csv_files = glob(os.path.join(subdir, '*.csv'))
 
-            # csv_files = [csv_file for csv_file in csv_files if 'calibration' not in csv_file]
+            csv_files = [csv_file for csv_file in csv_files if 'calibration' in csv_file]
             
             for csv_file in csv_files:
                 print(f"Processing file: {csv_file}")
