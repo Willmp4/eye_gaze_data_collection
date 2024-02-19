@@ -27,7 +27,7 @@ def main():
     print(f"Processed {len(X)} items.")
 
     # Save the processed data
-    with open('./pickel_files/all_data_200_100_head_pose.pkl', 'wb') as f:
+    with open('./pickel_files/calib_head_pose.pkl', 'wb') as f:
         pickle.dump((X,Y), f)
 
 
@@ -173,7 +173,7 @@ def process_images_parallel(base_dir):
             metadata_file_path = os.path.join(subdir, 'metadata.json')
             csv_files = glob.glob(os.path.join(subdir, '*.csv'))  # Correctly use glob.glob() here as well
 
-            # csv_files = [csv_file for csv_file in csv_files if 'calibration' in csv_file]
+            csv_files = [csv_file for csv_file in csv_files if 'calibration' in csv_file]
             
             for csv_file in csv_files:
                 print(f"Processing file: {csv_file}")
