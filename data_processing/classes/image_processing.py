@@ -1,3 +1,4 @@
+from blink_detector import BlinkDetector
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,21 +33,17 @@ class ImageProcessor:
 
         return cropped_region, (min_x, min_y, max_x, max_y)
 
-
-    def detect_pupil(self, eye_image, eye_center):
+    def detect_pupil(self, eye_image):
         # Enhance resolution
         eye_image = self.enhance_image_resolution(eye_image, self.sr_model)
 
         gray = cv2.cvtColor(eye_image, cv2.COLOR_BGR2GRAY)
-
 
         gray = cv2.equalizeHist(gray)  # Histogram Equalization
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)  # Gaussian Blur
 
         # Find contours
         contours, _ = cv2.findContours(blurred, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-
         # Sort contours by area and filter
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
@@ -110,6 +107,53 @@ class ImageProcessor:
 
         return processed_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox, shape
     
+    
+    def get_combined_eyes(self, frame, global_detector, global_predictor, target_size=(200, 100)):
+        """
+        Detects, enhances, and combines the eye regions including the nose bridge from the frame.
+        Args:
+            frame: The input image frame.
+            global_detector: Face detector.
+            global_predictor: Landmark predictor.
+            target_size: Target size for resizing the combined eye region.
+        Returns:
+            The combined eye regions including the nose bridge, or None if not detected.
+        """
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = global_detector(gray)
+
+        # super resolution image
+        for face in faces:
+            landmarks = global_predictor(gray, face)
+
+            forehead_points = [20, 21, 22, 23, 0 ,16]
+            left_eye_landmarks = [36, 37, 38, 39, 40, 41]
+            right_eye_landmarks = [42, 43, 44, 45, 46, 47]
+            nose_bridge_points = [27, 28, 29]
+
+            blink_detctor = BlinkDetector()
+            
+            if blink_detctor.detect_blink(landmarks, left_eye_landmarks, right_eye_landmarks):
+                print("Blink Detected")
+
+            combined_eye_region, _ = ImageProcessor.extract_eye_region(
+                frame, landmarks, left_eye_landmarks, right_eye_landmarks, nose_bridge_points, forehead_points)
+
+            if isinstance(combined_eye_region, np.ndarray):
+
+                # Apply super-resolution
+                # combined_eye_super_res = ImageProcessor.enhance_image_resolution(combined_eye_region, global_sr_model)
+
+                # Resize to the final target size
+                combined_eye_final_resized = cv2.resize(combined_eye_region, target_size, interpolation=cv2.INTER_AREA)
+
+                # combined_eye_final_resized = cv2.cvtColor(combined_eye_final_resized, cv2.COLOR_BGR2GRAY)
+                combined_eye_final_resized = combined_eye_final_resized.astype(np.float32) / 255.0
+
+                return combined_eye_final_resized
+
+        return None
+        
     def get_head_pose(self, shape, camera_matrix, dist_coeffs):
         # Define the model points (the points in a generic 3D model face)
         model_points = np.array([
