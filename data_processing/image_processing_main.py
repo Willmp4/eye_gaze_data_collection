@@ -6,10 +6,9 @@ sys.path.append(str(parent_dir))
 import os
 import cv2
 import numpy as np
-import json
-from data_handelr import DataHandler
-from image_processing import ImageProcessor
-from data_processing.classes.csv_manager import CSVManager
+from classes.data_handelr import DataHandler
+from classes.image_processing import ImageProcessor
+from classes.csv_manager import CSVManager
 from multiprocessing import Pool
 import pandas as pd
 import dlib

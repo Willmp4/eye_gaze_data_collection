@@ -1,8 +1,13 @@
+import sys
+from pathlib import Path
+parent_dir = Path.cwd().parent.parent
+sys.path.append(str(parent_dir))
+
 import os
 import cv2
 import numpy as np
 import json
-from image_processing import ImageProcessor
+from classes.image_processing import ImageProcessor
 from multiprocessing import Pool
 import pandas as pd
 import dlib
@@ -11,14 +16,14 @@ import pickle
 
 # Global initialization
 global_detector = dlib.get_frontal_face_detector()
-global_predictor = dlib.shape_predictor('../shape_predictor_68_face_landmarks.dat')
+global_predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 global_sr_model = cv2.dnn_superres.DnnSuperResImpl_create()
-global_sr_model.readModel("../EDSR_x4.pb")
+global_sr_model.readModel("EDSR_x4.pb")
 global_sr_model.setModel("edsr", 4)
 ImageProcessor = ImageProcessor(global_detector, global_predictor, global_sr_model)
 
 def main():
-    local_base_dir = '../data'
+    local_base_dir = './data'
     X, Y = process_images_parallel(local_base_dir)
 
     print(f"Processed {len(X)} items.")

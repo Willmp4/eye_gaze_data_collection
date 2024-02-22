@@ -1,4 +1,4 @@
-from blink_detector import BlinkDetector
+from classes.blink_detector import BlinkDetector
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -136,7 +136,7 @@ class ImageProcessor:
             if blink_detctor.detect_blink(landmarks, left_eye_landmarks, right_eye_landmarks):
                 print("Blink Detected")
 
-            combined_eye_region, _ = ImageProcessor.extract_eye_region(
+            combined_eye_region, _ = self.extract_eye_region(
                 frame, landmarks, left_eye_landmarks, right_eye_landmarks, nose_bridge_points, forehead_points)
 
             if isinstance(combined_eye_region, np.ndarray):
