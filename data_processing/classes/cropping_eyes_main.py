@@ -1,8 +1,3 @@
-import sys
-from pathlib import Path
-parent_dir = Path.cwd().parent.parent
-sys.path.append(str(parent_dir))
-
 import os
 import cv2
 import numpy as np
@@ -18,18 +13,18 @@ import pickle
 global_detector = dlib.get_frontal_face_detector()
 global_predictor = dlib.shape_predictor('../shape_predictor_68_face_landmarks.dat')
 global_sr_model = cv2.dnn_superres.DnnSuperResImpl_create()
-global_sr_model.readModel("EDSR_x4.pb")
+global_sr_model.readModel("../EDSR_x4.pb")
 global_sr_model.setModel("edsr", 4)
 ImageProcessor = ImageProcessor(global_detector, global_predictor, global_sr_model)
 
 def main():
-    local_base_dir = './data'
+    local_base_dir = '../data'
     X, Y = process_images_parallel(local_base_dir)
 
     print(f"Processed {len(X)} items.")
 
     # Save the processed data
-    with open('./pickel_files/calib_head_pose.pkl', 'wb') as f:
+    with open('./calib_head_pose.pkl', 'wb') as f:
         pickle.dump((X,Y), f)
 
 def compute_global_stats(base_dir):
@@ -45,7 +40,6 @@ def compute_global_stats(base_dir):
     max_vals = np.max(all_head_pose_data, axis=0)
     return  min_vals, max_vals
 
-# Assuming normalize_head_pose and get_combined_eyes are defined as before
 def get_screen_size(metadata_file_path):
     with open(metadata_file_path, 'r') as f:
         metadata = json.load(f)
@@ -113,7 +107,6 @@ def process_row(data, metadata_file_path, local_base_dir, min_vals, max_vals):
     # X: Combined eyes image
     # Y: Cursor position, eye box pupil data, head pose data
     X = combined_eyes
-# Assuming normalized_eye_box_pupil_data and normalized_head_pose_data are numpy arrays
     Y = [normalized_cursor_x, normalized_cursor_y, full_image_path] +  normalized_head_pose_data.tolist()
     return X, Y
 
