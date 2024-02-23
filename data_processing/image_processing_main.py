@@ -1,14 +1,18 @@
+import sys
+from pathlib import Path
+parent_dir = Path.cwd().parent.parent
+sys.path.append(str(parent_dir))
+
 import os
 import cv2
 import numpy as np
-import json
-from data_handelr import DataHandler
-from image_processing import ImageProcessor
-from CSVManager import CSVManager
+from classes.data_handelr import DataHandler
+from classes.image_processing import ImageProcessor
+from classes.csv_manager import CSVManager
 from multiprocessing import Pool
 import pandas as pd
 import dlib
-import cv2
+
 
 # Global initialization
 global_detector = dlib.get_frontal_face_detector()
