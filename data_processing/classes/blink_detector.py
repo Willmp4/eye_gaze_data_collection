@@ -34,3 +34,4 @@ class BlinkDetector:
             print("Blink Detected")
         else:
             self.blinking = False
+        return self.blinking
