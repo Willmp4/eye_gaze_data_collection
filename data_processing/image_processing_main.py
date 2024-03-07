@@ -18,8 +18,6 @@ import dlib
 global_detector = dlib.get_frontal_face_detector()
 global_predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 global_sr_model = cv2.dnn_superres.DnnSuperResImpl_create()
-global_sr_model.readModel("EDSR_x4.pb")
-global_sr_model.setModel("edsr", 4)
 
 def main():
     bucket_name = 'eye-gaze-data'
@@ -30,7 +28,7 @@ def main():
     data_handler.process_s3_bucket_data(bucket_name, local_base_dir, process_images, csv_manager)
 
 def process_single_image(image_path, existing_data, local_base_dir, subdirectory, csv_file_name, camera_info, csv_manager):
-    image_processor = ImageProcessor(global_detector, global_predictor, global_sr_model)
+    image_processor = ImageProcessor(global_detector, global_predictor)
 
     try:
         # Construct the full path to the image
