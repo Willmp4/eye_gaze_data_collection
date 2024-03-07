@@ -4,15 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class ImageProcessor:
-    def __init__(self, detector, predictor, sr_model):
+    def __init__(self, detector, predictor):
         self.detector = detector
         self.predictor = predictor
-        self.sr_model = sr_model
-
-    def enhance_image_resolution(self, image, sr_model):
-        # Enhance the resolution of the image using the preloaded model
-        enhanced_image = sr_model.upsample(image)
-        return enhanced_image
 
     def extract_eye_region(self, image, landmarks, left_eye_points, right_eye_points, nose_bridge_points, forehead_points):
         # Combine the eye, nose bridge, and forehead points
@@ -107,7 +101,6 @@ class ImageProcessor:
 
         return processed_data, left_eye_info, right_eye_info, left_eye_bbox, right_eye_bbox, shape
     
-    
     def get_combined_eyes(self, frame, global_detector, global_predictor, target_size=(200, 100)):
         """
         Detects, enhances, and combines the eye regions including the nose bridge from the frame.
@@ -173,7 +166,6 @@ class ImageProcessor:
                 (shape.part(48).x, shape.part(48).y),     # Left Mouth corner
                 (shape.part(54).x, shape.part(54).y)      # Right mouth corner
             ], dtype="double")
-
 
         (success, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
 

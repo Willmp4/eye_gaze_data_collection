@@ -18,9 +18,7 @@ import pickle
 global_detector = dlib.get_frontal_face_detector()
 global_predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 global_sr_model = cv2.dnn_superres.DnnSuperResImpl_create()
-global_sr_model.readModel("EDSR_x4.pb")
-global_sr_model.setModel("edsr", 4)
-ImageProcessor = ImageProcessor(global_detector, global_predictor, global_sr_model)
+ImageProcessor = ImageProcessor(global_detector, global_predictor)
 
 def main():
     local_base_dir = './data'
