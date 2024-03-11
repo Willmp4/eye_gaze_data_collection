@@ -3,12 +3,12 @@ import scipy.io as sio
 import cv2 
 import os
 import sys
-sys.path.append("../core/")
+# sys.path.append("../")
 import data_processing_core as dpc
 
-root = "/home/cyh/GazeDataset20200519/Original/MPIIGaze"
-sample_root = "/home/cyh/GazeDataset20200519/Original/MPIIGaze/Origin/Evaluation Subset/sample list for eye image"
-out_root = "/home/cyh/GazeDataset20200519/EyeBased/MPIIGaze-new"
+root = "./MPIIGaze/Data/Original"
+sample_root = "./MPIIGaze/Evaluation Subset/sample list for eye image"
+out_root = "./MPII-new"
 scale =True
 
 def ImageProcessing_MPII():
@@ -18,7 +18,7 @@ def ImageProcessing_MPII():
         sample_list = os.path.join(sample_root, person) 
 
         person = person.split(".")[0]
-        im_root = os.path.join(root, "Origin", "Data", "Original", person)
+        im_root = os.path.join(root, person)
 
         im_outpath = os.path.join(out_root, "Image", person)
         label_outpath = os.path.join(out_root, "Label", f"{person}.label")

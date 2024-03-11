@@ -16,6 +16,7 @@ __init__.py
 /data_processing/data_
 /data_processing/data_processing
 /data_processing/models/*
+/data_processing/MPII-new
 
 *.png
 *.pkl
