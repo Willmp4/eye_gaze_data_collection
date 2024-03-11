@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-import im_plot as ipt
+import math
 
 class norm:  
     def __init__(self, center, gazetarget, headrotvec, imsize, camparams, newfocal=960, newdistance=600):
